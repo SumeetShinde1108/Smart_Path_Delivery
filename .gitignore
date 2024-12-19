@@ -1,0 +1,53 @@
+# Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Environment variables and settings
+.env
+*.env
+
+# Virtual environment
+venv/
+env/
+
+# Django-specific files
+db.sqlite3
+*.log
+staticfiles/
+media/
+
+# IDE and editor-specific files
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.egg-info/
+*.egg
+*.tar.gz
+*.whl
+build/
+dist/
+
+# Coverage reports
+.coverage
+htmlcov/
+coverage.xml
+
+# Testing-related files
+pytest_cache/
+.tox/
+*.cover
+
+# Node modules (if using Node.js for front-end)
+node_modules/
+npm-debug.log
+
+# Docker-related files
+*.pid
