@@ -38,18 +38,18 @@ class Order(models.Model):
         (STATUS_COMPLETED, "Complete")
     ]
 
-    name = models.CharField(max_length=64)
-    total_weight = models.FloatField() 
     location = models.ForeignKey(
         Location, 
-        on_delete = models.CASCADE,
-        related_name = "Orders"
+        on_delete=models.CASCADE,
+        related_name="Orders"
         )
+    name = models.CharField(max_length=64)
+    total_weight = models.FloatField() 
     status = models.CharField(
-        max_length = 64,
-        choices = CHOICES,
-        default = "Pending"
-    )
+        max_length=64,
+        choices=CHOICES,
+        default="Pending"
+        )
 
     class Meta:
         verbose_name = "Order"
@@ -62,16 +62,16 @@ class Order(models.Model):
 class Delivery(models.Model):
     assigned_vehicle = models.ForeignKey(
         Vehicle,
-        on_delete = models.CASCADE,
-        related_name = "Deliveries"
-    )
-    delivery_date = models.DateField
-    delivered_weight = models.FloatField()
+        on_delete=models.CASCADE,
+        related_name="Deliveries"
+        )
     order = models.ForeignKey(
         Order,
-        on_delete = models.CASCADE,
-        related_name = "Deliveries" 
-    ) 
+        on_delete=models.CASCADE,
+        related_name="Deliveries" 
+        ) 
+    delivery_date = models.DateField
+    delivered_weight = models.FloatField()
     sequence = models.PositiveIntegerField()
     
     class Meta:
