@@ -27,3 +27,19 @@ class Location(models.Model):
         return self.name
 
 
+class Order(models.Model):
+    STATUS_PENDING = 'Pending'
+    STATUS_PARTIAL_DELIVERY = 'Partially_Delivered'
+    STATUS_COMPLETED = 'Completed' 
+
+    CHOICES = [
+        (STATUS_PENDING, "Pending"),
+        (STATUS_PARTIAL_DELIVERY, "Partially_Delivered"),
+        (STATUS_COMPLETED, "Complete")
+    ]
+
+
+    
+
+
+
