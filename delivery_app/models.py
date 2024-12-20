@@ -38,6 +38,21 @@ class Order(models.Model):
         (STATUS_COMPLETED, "Complete")
     ]
 
+    name = models.CharField(max_length=64)
+    total_weight = models.FloatField() 
+    location = models.ForeignKey(
+        Location, 
+        on_delete = models.CASCADE,
+        related_name = "Orders"
+        )
+    status = models.CharField(
+        max_length = 64,
+        choices = CHOICES,
+        default = "Pending"
+    )
+
+
+
 
     
 
