@@ -20,8 +20,8 @@ class Location(models.Model):
     latitude = models.FloatField()
 
     class Meta:
-        verbose_name = 'Location'
-        verbose_name_plural = 'Locations'
+        verbose_name = "Location"
+        verbose_name_plural = "Locations"
 
     def __str__(self):
         return self.name
@@ -51,10 +51,40 @@ class Order(models.Model):
         default = "Pending"
     )
 
+    class Meta:
+        verbose_name = "Order"
+        verbose_name_plural = "Orders"
+
+    def __str__(self):
+        return self.name 
 
 
-
+class Delivery(models.Model):
+    assigned_vehicle = models.ForeignKey(
+        Vehicle,
+        on_delete = models.CASCADE,
+        related_name = "Deliveries"
+    )
+    delivery_date = models.DateField
+    delivered_weight = models.FloatField()
+    order = models.ForeignKey(
+        Order,
+        on_delete = models.CASCADE,
+        related_name = "Deliveries" 
+    ) 
+    sequence = models.PositiveIntegerField()
     
+    class Meta:
+        verbose_name = "Delivery"
+        verbose_name_plural = "Deliveries"
+
+    def __str__(self):
+        return (
+            f"Vehicle: {self.assigned_vehicle.name}, "
+            f"Order: {self.order.name}, "
+            f"Weight: {self.delivered_weight} kg, "
+            f"Sequence: {self.sequence}"
+        )
 
 
 
