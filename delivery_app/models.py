@@ -48,7 +48,7 @@ class Order(models.Model):
     status = models.CharField(
         max_length=64,
         choices=CHOICES,
-        default="Pending"
+        default=STATUS_PENDING
         )
 
     class Meta:
@@ -70,7 +70,7 @@ class Delivery(models.Model):
         on_delete=models.CASCADE,
         related_name="Deliveries" 
         ) 
-    delivery_date = models.DateField
+    delivery_date = models.DateField()
     delivered_weight = models.FloatField()
     sequence = models.PositiveIntegerField()
     
@@ -82,7 +82,7 @@ class Delivery(models.Model):
         return (
             f"Vehicle: {self.assigned_vehicle.name}, "
             f"Order: {self.order.name}, "
-            f"Weight: {self.delivered_weight} kg, "
+            f"Weight: {self.delivered_weight} kgs, "
             f"Sequence: {self.sequence}"
         )
 
