@@ -1,0 +1,15 @@
+version: '3.9'
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smart_app
+    working_dir: /add
+    volumes:
+      - .:/add
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_DEBUG: "True"
