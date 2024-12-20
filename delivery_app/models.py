@@ -14,3 +14,16 @@ class Vehicle(models.Model):
         return self.name
 
 
+class Location(models.Model):
+    name = models.CharField(max_length=64)
+    longitude = models.FloatField()
+    latitude = models.FloatField()
+
+    class Meta:
+        verbose_name = 'Location'
+        verbose_name_plural = 'Locations'
+
+    def __str__(self):
+        return self.name
+
+
