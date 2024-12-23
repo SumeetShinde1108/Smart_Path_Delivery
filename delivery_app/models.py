@@ -71,6 +71,25 @@ class Distance(models.Model):
         R = 6371
         return round(R * c, 2)
 
+    @classmethod
+    def get_distance(cls, loc_a, loc_b):
+        try:
+            return cls.objects.get(location_a=loc_a, location_b=loc_b).distance_km
+        except cls.DoesNotExist:
+            return cls.objects.get(location_a=loc_b, location_b=loc_a).distance_km
+        except cls.DoesNotExist:
+            raise ValueError("Distance between locations not defined.")
+    
+    def save(self, *args, **kwargs):
+        if not self.distance:
+            self.distance = self.calculate_distance()
+        super().save(*args, **kwargs)
+
+
+
+
+
+
 
 
 
