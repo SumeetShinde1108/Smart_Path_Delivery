@@ -54,9 +54,23 @@ class Distance(models.Model):
         verbose_name_plural = "Distances"
 
     def __str__(self):
-        return f"{self.location_a.address} ↔ {self.location_b.address}: {self.distance_km} km"
+        return f"{self.location_a.address} ↔ {self.location_b.address}: {self.distance} km"
 
-        
+    def calculate_distance(self):
+        lat1 = radians(self.location_a.latitude)
+        lon1 = radians(self.location_a.longitude)
+        lat2 = radians(self.location_b.latitude)
+        lon2 = radians(self.location_b.longitude)
+
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+
+        a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        R = 6371
+        return round(R * c, 2)
+
 
 
 
