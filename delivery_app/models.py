@@ -17,7 +17,7 @@ class Location(models.Model):
 
 class Order(models.Model):
     order_id = models.CharField(max_length=50, unique=True)
-    weight_kg = models.FloatField(help_text="Weight in kgs" )
+    weight_kg = models.FloatField(help_text="Weight in kgs")
     delivery_location = models.ForeignKey(
         Location,
         on_delete=models.CASCADE
@@ -35,7 +35,30 @@ class Order(models.Model):
     def get_orders_for_date(delivery_date):
         return Order.objects.filter(date_of_order=delivery_date)
 
+
+class Distance(models.Model):
+    location_a = models.ForeignKey(
+        Location,
+        on_delete=models.CASCADE,
+        related_name="distance_from"
+        )
+    location_b = models.ForeignKey(
+        Location, 
+        on_delete=models.CASCADE,
+        related_name="distance_to"
+        )
+    distance = models.FloatField()
+
+    class Meta:
+        verbose_name = "Distance"
+        verbose_name_plural = "Distances"
+
+    def __str__(self):
+        return f"{self.location_a.address} ↔ {self.location_b.address}: {self.distance_km} km"
+
         
+
+
 
 
 
