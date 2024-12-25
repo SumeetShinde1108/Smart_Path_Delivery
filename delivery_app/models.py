@@ -39,8 +39,6 @@ class Order(models.Model):
         return f"Order {self.order_id} - {self.weight} kg"
 
 
- 
-
 class Distance(models.Model):
     location_a = models.ForeignKey(
         Location,
