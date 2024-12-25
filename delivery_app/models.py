@@ -1,4 +1,5 @@
 from django.db import models
+from delivery_app.utils import calculate_distance 
 from math import (
     radians,
     sin, 
@@ -38,6 +39,8 @@ class Order(models.Model):
         return f"Order {self.order_id} - {self.weight} kg"
 
 
+ 
+
 class Distance(models.Model):
     location_a = models.ForeignKey(
         Location,
@@ -62,21 +65,15 @@ class Distance(models.Model):
     def save(self, *args, **kwargs):
         if self.location_a == self.location_b:
             raise ValueError("Locations A and B cannot be the same.")
+        
         if self.distance is None:
-            self.distance = self.calculate_distance()
+            self.distance = calculate_distance(
+                self.location_a.latitude,
+                self.location_a.longitude,
+                self.location_b.latitude,
+                self.location_b.longitude,
+            )
         super().save(*args, **kwargs)
-
-    def calculate_distance(self):
-        lat1 = radians(self.location_a.latitude)
-        lon1 = radians(self.location_a.longitude)
-        lat2 = radians(self.location_b.latitude)
-        lon2 = radians(self.location_b.longitude)
-        dlon = lon2 - lon1
-        dlat = lat2 - lat1
-        a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-        c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        r = 6371 
-        return round(r * c, 2)
 
     @classmethod
     def get_distance(cls, loc_a, loc_b):
