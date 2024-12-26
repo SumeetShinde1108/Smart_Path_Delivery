@@ -67,7 +67,6 @@ class Distance(models.Model):
 
         super().save(*args, **kwargs)
 
-
     @classmethod
     def get_distance(cls, loc_a, loc_b):
         try:
@@ -80,7 +79,7 @@ class Distance(models.Model):
 
 
 class Vehicle(models.Model):
-    vehicle_no = models.CharField(max_length=50, unique=True)
+    vehicle_no = models.CharField(max_length=64, unique=True)
     vehicle_capacity = models.FloatField(help_text="Weight capacity in kilograms")
     average_speed = models.FloatField(help_text="Average speed in km/h")
     is_available = models.BooleanField(default=True)
