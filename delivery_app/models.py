@@ -1,12 +1,5 @@
 from django.db import models
 from delivery_app.utils import calculate_distance 
-from math import (
-    radians,
-    sin, 
-    cos, 
-    sqrt, 
-    atan2
-)
 
 
 class Location(models.Model):
@@ -63,15 +56,17 @@ class Distance(models.Model):
     def save(self, *args, **kwargs):
         if self.location_a == self.location_b:
             raise ValueError("Locations A and B cannot be the same.")
-        
+
         if self.distance is None:
             self.distance = calculate_distance(
                 self.location_a.latitude,
                 self.location_a.longitude,
                 self.location_b.latitude,
                 self.location_b.longitude,
-            )
+         )   
+
         super().save(*args, **kwargs)
+
 
     @classmethod
     def get_distance(cls, loc_a, loc_b):
