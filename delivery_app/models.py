@@ -3,7 +3,7 @@ from django.contrib.gis.db import models
 
 class Location(models.Model):
     '''
-    Represents a location with an address and geographical coordinates.
+    Represents a physical location with an address and coordinates for deliveries.
     '''
     address = models.CharField(max_length=255)
     point = models.PointField()
@@ -18,7 +18,7 @@ class Location(models.Model):
 
 class Order(models.Model):
     '''
-    Stores customer order details, including weight, location, and date.
+    Captures order details, including weight, delivery location, and order date.
     '''
     order_id = models.CharField(max_length=64, unique=True)
     weight = models.FloatField(help_text="Weight in kilograms")
@@ -40,7 +40,7 @@ class Order(models.Model):
 
 class Distance(models.Model):
     '''
-    Tracks the distance between two locations. 
+    Stores the distance between two locations for optimized route planning. 
     '''
     location_a = models.ForeignKey(
         Location,
@@ -61,11 +61,11 @@ class Distance(models.Model):
         
     def __str__(self):
         return f"{self.location_a.address} to {self.location_b.address}: {self.distance} km"
-
+    
 
 class Vehicle(models.Model):
     '''
-    Represents a vehicle with its capacity, speed, and availability.
+    Represents delivery vehicles with capacity, speed, and availability status.
     '''
     vehicle_no = models.CharField(max_length=64, unique=True)
     vehicle_capacity = models.FloatField(help_text="Weight capacity in kilograms")
@@ -86,7 +86,7 @@ class Vehicle(models.Model):
 
 class Route(models.Model):
     '''
-    Represent detail optimized routes for delivering orders using vehicles.
+    Defines optimized delivery routes, mapping orders to vehicles
     '''
     vehicles = models.ManyToManyField(Vehicle, blank=True)
     order = models.ForeignKey(
@@ -112,7 +112,7 @@ class Route(models.Model):
 
 class Delivery(models.Model):
     '''
-    Plans and tracks deliveries for a specific date.
+    Tracks delivery details, including date, vehicles, distance, and weight.
     '''
     route = models.ForeignKey(
         Route, 
