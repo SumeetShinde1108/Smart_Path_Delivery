@@ -7,13 +7,13 @@ class Location(models.Model):
     '''
     address = models.CharField(max_length=255)
     point = models.PointField()
-    
+
     class Meta:
         verbose_name = "Location"
         verbose_name_plural = "01 Locations"
 
     def __str__(self):
-        return f'Address :{self.address}'
+        return f'Address: {self.address}'
 
 
 class Order(models.Model):
@@ -32,48 +32,38 @@ class Order(models.Model):
     class Meta:
         verbose_name = "Order"
         verbose_name_plural = "02 Orders"
-        ordering = ['-date_of_order'] 
+        ordering = ['-date_of_order']
 
     def __str__(self):
         return f"Order {self.order_id} - {self.weight} kg"
 
 
-class Distance(models.Model):
+class Store(models.Model):
     '''
-    Stores the distance between two locations for optimized route planning. 
+    Represents stores where all items are dispatched for delivery.
     '''
-    location_a = models.ForeignKey(
+    name = models.CharField(max_length=128)
+    location = models.ForeignKey(
         Location,
         on_delete=models.CASCADE,
-        related_name="distance_from"
+        related_name="Location_Store"
     )
-    location_b = models.ForeignKey(
-        Location,
-        on_delete=models.CASCADE,
-        related_name="distance_to"
-    )
-    distance = models.FloatField(help_text="Distance between two locations")
 
     class Meta:
-        verbose_name = "Distance"
-        verbose_name_plural = "03 Distances"
-        unique_together = ("location_a", "location_b")
-        
+        verbose_name = "Store"
+        verbose_name_plural = "03 Stores"
+
     def __str__(self):
-        return f"{self.location_a.address} to {self.location_b.address}: {self.distance} km"
-    
+        return f'Store name: {self.name}, location: {self.location}'
+
 
 class Vehicle(models.Model):
     '''
     Represents delivery vehicles with capacity, speed, and availability status.
     '''
     vehicle_no = models.CharField(max_length=64, unique=True)
-    vehicle_capacity = models.FloatField(help_text="Weight capacity in kilograms")
+    capacity = models.FloatField(help_text="Weight capacity in kilograms")
     average_speed = models.FloatField(help_text="Average speed in km/h")
-    is_available = models.BooleanField(
-        default=True, 
-        help_text='Avaibility of a vehicle',
-    )
 
     class Meta:
         verbose_name = "Vehicle"
@@ -81,57 +71,35 @@ class Vehicle(models.Model):
         ordering = ['average_speed']
 
     def __str__(self):
-        return f"Vehicle {self.vehicle_no} - Capacity: {self.vehicle_capacity} kg"
-
-
-class Route(models.Model):
-    '''
-    Defines optimized delivery routes, mapping orders to vehicles
-    '''
-    vehicles = models.ManyToManyField(Vehicle, blank=True)
-    order = models.ForeignKey(
-        Order, 
-        on_delete=models.CASCADE,
-        related_name="Order_Route"
-    )
-    total_distance = models.FloatField(help_text="Total distance covered by a single route in kms")
-    total_weight = models.FloatField(
-        default=0,
-        help_text="Total weight of all orders assigned to this route in kgs",
-    )
-    path = models.JSONField(default=list)
-
-    class Meta:
-        verbose_name = "Route"
-        verbose_name_plural = "05 Routes"
-        ordering = ['-total_distance']
-
-    def __str__(self):
-        return f"Route {self.id} - {self.total_distance} km"
+        return f"Vehicle {self.vehicle_no} - Capacity: {self.capacity} kg"
 
 
 class Delivery(models.Model):
     '''
-    Tracks delivery details, including date, vehicles, distance, and weight.
+    Tracks delivery details for a single day, with assigned store, vehicles, and total weight.
     '''
-    route = models.ForeignKey(
-        Route, 
+    store = models.ForeignKey(
+        Store,
         on_delete=models.CASCADE,
-        related_name="Route_Delivery"
+        related_name="deliveries"
     )
-    total_vehicles = models.IntegerField(help_text="No of vehicles allocated for this delivery")
-    total_distance = models.FloatField(help_text="Total distance covered by all routes in kms")
+    vehicles = models.ManyToManyField(
+        Vehicle,
+        related_name="deliveries",
+        help_text="Vehicles allocated for this delivery"
+    )
     total_weight = models.FloatField(
-        help_text="Combined weight of all orders assigned to this delivery, in kilograms",
+        help_text="Combined weight of all orders for this delivery in kilograms"
     )
-    date_of_delivery = models.DateField()
-    
+    date_of_delivery = models.DateField(
+        unique=True, help_text="Delivery date (only one delivery per day)"
+    )
+
     class Meta:
         verbose_name = "Delivery"
-        verbose_name_plural = "06 Deliveries"
+        verbose_name_plural = "05 Deliveries"
         ordering = ['-date_of_delivery']
 
     def __str__(self):
-        return f"Delivery date {self.date_of_delivery} - {self.total_vehicles} vehicles"
+        return f"Delivery {self.date_of_delivery} - {self.total_weight} kg"
 
-    
