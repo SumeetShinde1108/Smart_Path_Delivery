@@ -17,6 +17,7 @@ class StoreInline(admin.TabularInline):
     model = Store
     extra = 1
 
+
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('address', 'point',)
