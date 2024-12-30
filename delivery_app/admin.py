@@ -22,7 +22,7 @@ class LocationAdmin(admin.ModelAdmin):
     list_display = ('address', 'point')
     search_fields = ('address',)
     ordering = ('address',)
-    Inlines = ['OrderInline', 'StoreInline']
+    Inlines = [OrderInline, StoreInline]
 
 
 @admin.register(Order)
