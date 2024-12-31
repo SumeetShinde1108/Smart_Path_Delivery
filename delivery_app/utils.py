@@ -38,3 +38,32 @@ def calculate_optimal_route(locations, store_location):
             best_route = route
 
     return best_route
+
+def create_delivery(store, orders, vehicles, date_of_delivery):
+    if not orders:
+        raise ValueError("No orders provided for delivery.")
+
+    if not vehicles:
+        raise ValueError("No vehicles available for delivery.")
+
+    total_weight = sum(order.weight for order in orders)
+    try:
+        allocated_vehicles = allocate_vehicles_for_delivery(total_weight, vehicles)
+    except ValueError as e:
+        raise ValueError(f"Vehicle allocation failed: {str(e)}")
+
+    delivery = Delivery.objects.create(
+        store=store, total_weight=total_weight, date_of_delivery=date_of_delivery
+    )
+    delivery.vehicles.set(allocated_vehicles)
+
+    try:
+        optimal_route = calculate_optimal_route(
+            [order.delivery_location for order in orders], store.location
+        )
+
+    except Exception as e:
+        raise ValueError(f"Route optimization failed: {str(e)}")
+
+    return delivery, allocated_vehicles, optimal_route
+
