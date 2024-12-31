@@ -39,6 +39,33 @@ def calculate_optimal_route(locations, store_location):
 
     return best_route
 
+
+def allocate_vehicles_to_deliveries():
+    pending_deliveries = Delivery.objects.filter(vehicles__isnull=True)
+
+    for delivery in pending_deliveries:
+        try:
+            vehicles = Vehicle.objects.all().order_by("-capacity", "-average_speed")
+
+            allocated_vehicles = []
+            remaining_weight = delivery.total_weight
+
+            for vehicle in vehicles:
+                if remaining_weight <= 0:
+                    break
+                if vehicle.capacity > 0:
+                    allocated_vehicles.append(vehicle)
+                    remaining_weight -= vehicle.capacity
+
+            if remaining_weight > 0:
+                raise ValueError("Not enough vehicle capacity to handle the delivery.")
+            delivery.vehicles.set(allocated_vehicles)
+            delivery.save()
+
+        except Exception as e:
+            print(f"Error allocating vehicles for delivery {delivery.id}: {str(e)}")
+
+
 def create_delivery(store, orders, vehicles, date_of_delivery):
     if not orders:
         raise ValueError("No orders provided for delivery.")
@@ -66,4 +93,3 @@ def create_delivery(store, orders, vehicles, date_of_delivery):
         raise ValueError(f"Route optimization failed: {str(e)}")
 
     return delivery, allocated_vehicles, optimal_route
-
