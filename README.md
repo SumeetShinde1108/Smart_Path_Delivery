@@ -22,30 +22,30 @@ A system for delivering items to multiple locations by determining the shortest 
  
  #### 1. Location Model
     > Stores location information for:
-        > Customer orders.
-        > Stores or hubs.
-        > Includes geographical coordinates for precise routing.
+        1. Customer orders.
+        2. Stores or hubs.
+        3. Includes geographical coordinates for precise routing.
 
  #### 2. Order Model
     > Captures details of customer orders, such as:
-        > Order ID.
-        > Items and quantities.
+        1. Order ID.
+        2. Items and quantities.
 
  #### 3. Store Model
     > Represents a hub or warehouse where:
-        > Vehicles begin and end their delivery routes.
-        > Inventory for deliveries is stored.
+        1. Vehicles begin and end their delivery routes.
+        2. Inventory for deliveries is stored.
 
  #### 4. Vehicle Model
     > Contains details about vehicles, including:
-        > Vehicle number.
-        > Weight capacity.
-        > Average speed.
+        1. Vehicle number.
+        2. Weight capacity.
+        3. Average speed.
 
  #### 5. Delivery Model
     > Tracks delivery-specific details:
-        > Assigned vehicles for the delivery.
-        > Total route distance.
-        > Total weight carried by all vehicles.
+        1. Assigned vehicles for the delivery.
+        2. Total route distance.
+        3. Total weight carried by all vehicles.
 
 
