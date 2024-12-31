@@ -36,13 +36,6 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.order_id} - {self.weight} kg"
-    
-    def save(self, *args, **kwargs):
-        if self.delivery_location:
-            matching_store = Store.objects.filter(location=self.delivery_location).first()
-            if matching_store:
-                self.delivery_location = matching_store.location
-        super().save(*args, **kwargs)
 
 
 class Store(models.Model):
