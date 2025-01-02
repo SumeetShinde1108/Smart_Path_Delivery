@@ -45,7 +45,7 @@ class StoreAdmin(admin.ModelAdmin):
 
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
-    list_display = ['vehicle_no', 'capacity', 'average_speed']
+    list_display = ['id', 'vehicle_no', 'capacity', 'average_speed']
     list_filter = ['average_speed']
     search_fields = ['vehicle_no']
     ordering = ['average_speed']
@@ -53,7 +53,7 @@ class VehicleAdmin(admin.ModelAdmin):
 
 @admin.register(Delivery)
 class DeliveryAdmin(admin.ModelAdmin):
-    list_display = ['store', 'date_of_delivery', 'total_weight']
+    list_display = ['id', 'store', 'date_of_delivery', 'total_weight']
     list_filter = ['date_of_delivery']
     search_fields = ['store__name', 'store__location__address']
     ordering = ['-date_of_delivery']
