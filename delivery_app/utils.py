@@ -1,11 +1,14 @@
+from ortools.constraint_solver import routing_enums_pb2
+from ortools.constraint_solver import pywrapcp
 from django.contrib.gis.geos import Point
-from itertools import permutations
 from math import radians, sin, cos, sqrt, atan2
-from delivery_app.models import Delivery, Vehicle
+from delivery_app.models import Delivery, Vehicle, Store, Order
+from datetime import date
 
 
 def haversine_distance(point1, point2):
-    R = 6371.0  
+    R = 6371.0
+
     lat1, lon1 = radians(point1.y), radians(point1.x)
     lat2, lon2 = radians(point2.y), radians(point2.x)
 
@@ -17,79 +20,108 @@ def haversine_distance(point1, point2):
 
     return R * c
 
+def create_data_model(store, orders, vehicles):
+    if not orders or not vehicles:
+        raise ValueError("Orders or vehicles cannot be empty.")
 
-def calculate_optimal_route(locations, store_location):
-    all_locations = [store_location] + locations
-    location_ids = [loc.id for loc in all_locations]
-    best_route = None
-    min_distance = float("inf")
+    locations = [store.location.point] + [
+        order.delivery_location.point for order in orders
+    ]
+    distance_matrix = []
+    for loc1 in locations:
+        row = [haversine_distance(loc1, loc2) for loc2 in locations]
+        distance_matrix.append(row)
 
-    for perm in permutations(location_ids[1:]):
-        route = [location_ids[0]] + list(perm) + [location_ids[0]]
-        total_distance = 0
+    return {
+        "distance_matrix": distance_matrix,
+        "num_vehicles": len(vehicles),
+        "depot": 0,
+    }
 
-        for i in range(len(route) - 1):
-            point1 = all_locations[location_ids.index(route[i])].point
-            point2 = all_locations[location_ids.index(route[i + 1])].point
-            total_distance += haversine_distance(point1, point2)
+def print_solution(data, manager, routing, solution):
+    routes = []
+    total_distance = 0
 
-        if total_distance < min_distance:
-            min_distance = total_distance
-            best_route = route
+    for vehicle_id in range(data["num_vehicles"]):
+        index = routing.Start(vehicle_id)
+        route = []
+        route_distance = 0
 
-    return best_route
+        while not routing.IsEnd(index):
+            route.append(manager.IndexToNode(index))
+            previous_index = index
+            index = solution.Value(routing.NextVar(index))
+            route_distance += routing.GetArcCostForVehicle(
+                previous_index, index, vehicle_id
+            )
 
-
-def allocate_vehicles_to_deliveries():
-    pending_deliveries = Delivery.objects.filter(vehicles__isnull=True)
-
-    for delivery in pending_deliveries:
-        try:
-            vehicles = Vehicle.objects.all().order_by("-capacity", "-average_speed")
-
-            allocated_vehicles = []
-            remaining_weight = delivery.total_weight
-
-            for vehicle in vehicles:
-                if remaining_weight <= 0:
-                    break
-                if vehicle.capacity > 0:
-                    allocated_vehicles.append(vehicle)
-                    remaining_weight -= vehicle.capacity
-
-            if remaining_weight > 0:
-                raise ValueError("Not enough vehicle capacity to handle the delivery.")
-            delivery.vehicles.set(allocated_vehicles)
-            delivery.save()
-
-        except Exception as e:
-            print(f"Error allocating vehicles for delivery {delivery.id}: {str(e)}")
-
-
-def create_delivery(store, orders, vehicles, date_of_delivery):
-    if not orders:
-        raise ValueError("No orders provided for delivery.")
-
-    if not vehicles:
-        raise ValueError("No vehicles available for delivery.")
-
-    total_weight = sum(order.weight for order in orders)
-    try:
-        allocated_vehicles = allocate_vehicles_for_delivery(total_weight, vehicles)
-    except ValueError as e:
-        raise ValueError(f"Vehicle allocation failed: {str(e)}")
-
-    delivery = Delivery.objects.create(
-        store=store, total_weight=total_weight, date_of_delivery=date_of_delivery
-    )
-    delivery.vehicles.set(allocated_vehicles)
-
-    try:
-        optimal_route = calculate_optimal_route(
-            [order.delivery_location for order in orders], store.location
+        route.append(manager.IndexToNode(index))
+        routes.append(
+            {"vehicle_id": vehicle_id, "route": route, "distance": route_distance}
         )
+        total_distance += route_distance
 
-    except Exception as e:
-        raise ValueError(f"Route optimization failed: {str(e)}")
+    return {"routes": routes, "total_distance": total_distance}
 
-    return delivery, allocated_vehicles, optimal_route
+
+def assign_routes_to_delivery(store, orders, vehicles, delivery_date):
+    if not vehicles:
+        raise ValueError("No vehicles available for routing.")
+    if not orders:
+        raise ValueError("No orders available for delivery.")
+
+    existing_delivery = Delivery.objects.filter(date_of_delivery=delivery_date).first()
+    if existing_delivery:
+
+        delivery = existing_delivery
+    else:
+        delivery = Delivery.objects.create(
+            store=store,
+            date_of_delivery=delivery_date,
+            total_weight=sum(order.weight for order in orders),
+        )
+    delivery.orders.set(orders)
+    delivery.vehicles.set(vehicles)
+    data = create_data_model(store, orders, vehicles)
+    print("Distance Matrix:", data["distance_matrix"])
+    print("Number of Vehicles:", data["num_vehicles"])
+    print("Depot Index:", data["depot"])
+
+    manager = pywrapcp.RoutingIndexManager(
+        len(data["distance_matrix"]), data["num_vehicles"], data["depot"]
+    )
+    routing = pywrapcp.RoutingModel(manager)
+
+    def distance_callback(from_index, to_index):
+        from_node = manager.IndexToNode(from_index)
+        to_node = manager.IndexToNode(to_index)
+        return int(data["distance_matrix"][from_node][to_node])
+
+    transit_callback_index = routing.RegisterTransitCallback(distance_callback)
+    routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
+
+    routing.AddDimension(
+        transit_callback_index,
+        0,
+        1000000,
+        True,
+        "Distance",
+    )
+
+    distance_dimension = routing.GetDimensionOrDie("Distance")
+    distance_dimension.SetGlobalSpanCostCoefficient(100)
+
+    search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+    search_parameters.first_solution_strategy = (
+        routing_enums_pb2.FirstSolutionStrategy.PARALLEL_CHEAPEST_INSERTION
+    )
+    search_parameters.log_search = True
+    search_parameters.time_limit.seconds = 30
+
+    solution = routing.SolveWithParameters(search_parameters)
+    if not solution:
+        raise ValueError("No solution found for routing problem.")
+
+    solution_data = print_solution(data, manager, routing, solution)
+
+    return solution_data
