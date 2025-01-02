@@ -8,7 +8,6 @@ from delivery_app.models import Order, Store, Vehicle, Delivery
 def create_or_update_delivery(sender, instance, created, **kwargs):
     if not created:
         return
-
     try:
         store = Store.objects.first()
         if not store:
