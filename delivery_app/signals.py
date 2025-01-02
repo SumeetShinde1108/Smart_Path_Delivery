@@ -1,21 +1,30 @@
-from django.db.models.signals import post_save
+from django.db import transaction
 from django.dispatch import receiver
-from delivery_app.models import Order, Store, Delivery
+from django.db.models.signals import post_save
+from delivery_app.models import Order, Store, Vehicle, Delivery
 
 
 @receiver(post_save, sender=Order)
 def create_or_update_delivery(sender, instance, created, **kwargs):
-    store = Store.objects.first()
-    if not store:
-        raise ValueError("No store is defined in the system.")
+    try:
+        store = Store.objects.first()
+        if not store:
+            raise ValueError("No store is defined in the system.")
 
-    delivery, created = Delivery.objects.get_or_create(
-        store=store,
-        date_of_delivery=instance.date_of_order,
-        defaults={"total_weight": 0},
-    )
+        delivery, created = Delivery.objects.get_or_create(
+            store=store,
+            date_of_delivery=instance.date_of_order,
+            defaults={"total_weight": 0},
+        )
+        delivery.orders.add(instance)
+        delivery.total_weight += instance.weight
 
-    delivery.orders.add(instance)
+        if not delivery.vehicles.exists():
+            available_vehicles = Vehicle.objects.all()
+            if available_vehicles.exists():
+                delivery.vehicles.set(available_vehicles)
 
-    delivery.total_weight += instance.weight
-    delivery.save()
+        delivery.save()
+
+    except Exception as e:
+        raise  
