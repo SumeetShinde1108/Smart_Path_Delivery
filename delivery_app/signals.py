@@ -6,6 +6,9 @@ from delivery_app.models import Order, Store, Vehicle, Delivery
 
 @receiver(post_save, sender=Order)
 def create_or_update_delivery(sender, instance, created, **kwargs):
+    if not created:
+        return
+
     try:
         store = Store.objects.first()
         if not store:
@@ -16,6 +19,7 @@ def create_or_update_delivery(sender, instance, created, **kwargs):
             date_of_delivery=instance.date_of_order,
             defaults={"total_weight": 0},
         )
+
         delivery.orders.add(instance)
         delivery.total_weight += instance.weight
 
@@ -26,5 +30,9 @@ def create_or_update_delivery(sender, instance, created, **kwargs):
 
         delivery.save()
 
+    except ValueError as ve:
+        print(f"Error: {ve}")
+        raise
     except Exception as e:
-        raise  
+        print(f"Unexpected error: {e}")
+        raise
