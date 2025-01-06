@@ -160,3 +160,47 @@ def assign_routes_to_delivery(store, orders, vehicles, delivery_date):
     )
 
 
+def assign_vehicles_and_extract_routes(
+    data, manager, routing, solution, vehicles, orders, delivery
+):
+    routes = []
+    total_distance = 0
+
+    for vehicle_id in range(data["num_vehicles"]):
+        index = routing.Start(vehicle_id)
+        route = []
+        route_distance = 0
+
+        while not routing.IsEnd(index):
+            route.append(manager.IndexToNode(index))
+            previous_index = index
+            index = solution.Value(routing.NextVar(index))
+            route_distance += routing.GetArcCostForVehicle(
+                previous_index, index, vehicle_id
+            )
+
+        route.append(manager.IndexToNode(index))
+        assigned_order_ids = [orders[i - 1].id for i in route[1:-1]]
+
+        route_distance_km = route_distance / 1000
+
+        if assigned_order_ids:
+            routes.append(
+                {
+                    "vehicle_no": vehicles[vehicle_id].vehicle_no,
+                    "assigned_orders": assigned_order_ids,
+                    "route_distance_km": route_distance_km,
+                }
+            )
+            for order_id in assigned_order_ids:
+                order = Order.objects.get(id=order_id)
+                order.vehicle = vehicles[vehicle_id]
+                order.delivery = delivery
+                order.save()
+
+        total_distance += route_distance
+
+    print("\n SUCCESS: Routing solution generated.")
+    print(f"DEBUG: Total Distance = {total_distance / 1000} km")
+
+    return {"vehicle_routes": routes, "total_distance_km": total_distance / 1000}
