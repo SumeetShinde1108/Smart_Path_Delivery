@@ -14,10 +14,9 @@ A system for delivering items to multiple locations by determining the shortest 
 
 ## 2.Model_Feature  
 ### Models, admin configurations, and utility functions for routing algorithms.
-    Brute Force Algorithm: Calculates all possible paths for deliveries.
-    Shortest Path Selection: Identifies the most efficient route using the Haversine formula to compute distances between two geographical locations.
-    Vehicle Optimization: Allocates vehicles to minimize usage while ensuring deliveries are completed efficiently.
-
+    > Optimization Algorithm: Leverages advanced algorithms, like those in Google OR-Tools, to evaluate and calculate the optimal delivery paths based on various constraints.
+    >Shortest Path Calculation: Uses the Haversine formula and tools like OR-Tools to compute the shortest and most efficient delivery routes based on geographical data.
+    >Vehicle Allocation Optimization: Utilizes advanced optimization techniques (e.g., vehicle routing problem solvers in OR-Tools) to allocate vehicles in a manner that minimizes vehicle usage while ensuring all deliveries are completed efficiently, factoring in capacity and route optimization.
 ### Models:
  
  #### 1. Location Model
