@@ -76,3 +76,87 @@ def create_data_model(store, orders, vehicles):
     }
 
 
+def assign_routes_to_delivery(store, orders, vehicles, delivery_date):
+    if not vehicles:
+        return {"error": "No vehicles available for routing."}
+    if not orders:
+        return {"error": "No orders available for delivery."}
+
+    vehicles = sorted(vehicles, key=lambda v: v.capacity, reverse=True)
+
+    existing_delivery = Delivery.objects.filter(date_of_delivery=delivery_date).first()
+    delivery = existing_delivery or Delivery.objects.create(
+        store=store,
+        date_of_delivery=delivery_date,
+        total_weight=sum(order.weight for order in orders),
+    )
+
+    data = create_data_model(store, orders, vehicles)
+
+    print(f"DEBUG: Vehicles count: {len(vehicles)}")
+    print(f"DEBUG: Number of orders: {len(orders)}")
+    print(f"DEBUG: Distance Matrix: {data['distance_matrix']}")
+    print(f"DEBUG: Vehicle Capacities: {data['vehicle_capacities']}")
+
+    manager = pywrapcp.RoutingIndexManager(
+        len(data["distance_matrix"]), data["num_vehicles"], data["depot"]
+    )
+    routing = pywrapcp.RoutingModel(manager)
+
+    def distance_callback(from_index, to_index):
+        from_node = manager.IndexToNode(from_index)
+        to_node = manager.IndexToNode(to_index)
+        distance = data["distance_matrix"][from_node][to_node]
+        print(f"Distance from node {from_node} to node {to_node}: {distance} meters")
+        return distance
+
+    transit_callback_index = routing.RegisterTransitCallback(distance_callback)
+    routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
+
+    def demand_callback(from_index):
+        from_node = manager.IndexToNode(from_index)
+        return data["demands"][from_node]
+
+    demand_callback_index = routing.RegisterUnaryTransitCallback(demand_callback)
+    routing.AddDimensionWithVehicleCapacity(
+        demand_callback_index, 0, data["vehicle_capacities"], True, "Capacity"
+    )
+
+    def time_callback(from_index, to_index):
+        from_node = manager.IndexToNode(from_index)
+        to_node = manager.IndexToNode(to_index)
+        travel_distance = data["distance_matrix"][from_node][to_node]
+        vehicle_id = solution.Value(routing.VehicleVar(from_index))
+
+        if vehicle_id >= len(data["vehicle_speeds"]):
+            return travel_distance
+
+        travel_speed = data["vehicle_speeds"][vehicle_id]
+        travel_time = int(travel_distance / travel_speed)
+        return travel_time
+
+    time_callback_index = routing.RegisterTransitCallback(time_callback)
+    max_time = 1_000_000
+    routing.AddDimension(time_callback_index, 0, max_time, True, "Time")
+
+    search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+    search_parameters.local_search_metaheuristic = (
+        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
+    )
+    search_parameters.time_limit.seconds = 30
+
+    solution = routing.SolveWithParameters(search_parameters)
+
+    if solution is None:
+        print(
+            "DEBUG: No solution found by OR-Tools. The problem might be over-constrained."
+        )
+        return {
+            "error": "No feasible solution found. Adjust vehicle capacities or delivery constraints."
+        }
+
+    return assign_vehicles_and_extract_routes(
+        data, manager, routing, solution, vehicles, orders, delivery
+    )
+
+
