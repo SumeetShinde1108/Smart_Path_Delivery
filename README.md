@@ -15,8 +15,8 @@ A system for delivering items to multiple locations by determining the shortest 
 ## 2.Model_Feature  
 ### Models, admin configurations, and utility functions for routing algorithms.
     > Optimization Algorithm: Leverages advanced algorithms, like those in Google OR-Tools, to evaluate and calculate the optimal delivery paths based on various constraints.
-    >Shortest Path Calculation: Uses the Haversine formula and tools like OR-Tools to compute the shortest and most efficient delivery routes based on geographical data.
-    >Vehicle Allocation Optimization: Utilizes advanced optimization techniques (e.g., vehicle routing problem solvers in OR-Tools) to allocate vehicles in a manner that minimizes vehicle usage while ensuring all deliveries are completed efficiently, factoring in capacity and route optimization.
+    > Shortest Path Calculation: Uses the Haversine formula and tools like OR-Tools to compute the shortest and most efficient delivery routes based on geographical data.
+    > Vehicle Allocation Optimization: Utilizes advanced optimization techniques (e.g., vehicle routing problem solvers in OR-Tools) to allocate vehicles in a manner that minimizes vehicle usage while ensuring all deliveries are completed efficiently, factoring in capacity and route optimization.
 ### Models:
  
  #### 1. Location Model
