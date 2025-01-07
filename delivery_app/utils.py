@@ -7,11 +7,6 @@ from datetime import date
 
 
 def haversine_distance(point1, point2):
-    if not isinstance(point1, Point) or not isinstance(point2, Point):
-        raise ValueError(
-            "ERROR: Both inputs to haversine_distance must be Point objects."
-        )
-
     R = 6371.0
     lat1, lon1 = radians(point1.y), radians(point1.x)
     lat2, lon2 = radians(point2.y), radians(point2.x)
@@ -28,12 +23,6 @@ def create_data_model(store, orders, vehicles):
     if not isinstance(store.location.point, Point):
         raise ValueError("ERROR: Store location must be a valid Point object.")
 
-    for order in orders:
-        if not isinstance(order.delivery_location.point, Point):
-            raise ValueError(
-                f"ERROR: Order {order.id} delivery location must be a valid Point object."
-            )
-
     locations = [store.location.point] + [
         order.delivery_location.point for order in orders
     ]
@@ -48,12 +37,6 @@ def create_data_model(store, orders, vehicles):
 
     vehicle_capacities = [int(vehicle.capacity) for vehicle in vehicles]
     vehicle_speeds = [vehicle.average_speed for vehicle in vehicles]
-
-    for vehicle in vehicles:
-        if vehicle.average_speed <= 0:
-            raise ValueError(
-                f"ERROR: Vehicle {vehicle.vehicle_no} has an invalid speed ({vehicle.average_speed} km/h)."
-            )
 
     demands = [0] + [int(order.weight) for order in orders]
 
