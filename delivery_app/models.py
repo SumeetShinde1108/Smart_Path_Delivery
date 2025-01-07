@@ -8,6 +8,8 @@ class Location(models.Model):
 
     address = models.CharField(max_length=255)
     point = models.PointField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Location"
@@ -28,6 +30,8 @@ class Order(models.Model):
         Location, on_delete=models.CASCADE, related_name="Location_Order"
     )
     date_of_order = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Order"
@@ -47,6 +51,8 @@ class Store(models.Model):
     location = models.ForeignKey(
         Location, on_delete=models.CASCADE, related_name="Location_Store"
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Store"
@@ -64,6 +70,8 @@ class Vehicle(models.Model):
     vehicle_no = models.CharField(max_length=64, unique=True)
     capacity = models.FloatField(help_text="Weight capacity in kilograms")
     average_speed = models.FloatField(help_text="Average speed in km/h")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Vehicle"
@@ -102,6 +110,8 @@ class Delivery(models.Model):
     date_of_delivery = models.DateField(
         unique=True, help_text="Delivery date (only one delivery per day)"
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Delivery"
