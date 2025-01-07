@@ -74,7 +74,9 @@ def assign_routes_to_delivery(store, orders, vehicles, delivery_date):
     if not orders:
         raise ValueError("ERROR: No orders available for delivery.")
 
-    vehicles = sorted(vehicles, key=lambda v: v.capacity, reverse=True)
+    vehicles = sorted(
+        vehicles, key=lambda v: (v.capacity, v.average_speed), reverse=True
+    )
 
     existing_delivery = Delivery.objects.filter(date_of_delivery=delivery_date).first()
     delivery = existing_delivery or Delivery.objects.create(
