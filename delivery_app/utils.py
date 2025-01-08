@@ -99,6 +99,7 @@ def assign_routes_to_delivery(store, orders, vehicles, delivery_date):
         data, manager, routing, solution, vehicles, orders, delivery
     )
 
+
 def assign_vehicles_and_extract_routes(
     data, manager, routing, solution, vehicles, orders, delivery
 ):
@@ -108,7 +109,7 @@ def assign_vehicles_and_extract_routes(
     for vehicle_id in range(data["num_vehicles"]):
         index = routing.Start(vehicle_id)
         route, route_distance = [], 0
-        vehicle_weight = 0 
+        vehicle_weight = 0
 
         while not routing.IsEnd(index):
             route.append(manager.IndexToNode(index))
@@ -126,7 +127,7 @@ def assign_vehicles_and_extract_routes(
 
         for order_id in assigned_order_ids:
             order = Order.objects.get(id=order_id)
-            vehicle_weight += order.weight 
+            vehicle_weight += order.weight
 
         vehicle_route_info = {
             "vehicle_no": vehicles[vehicle_id].vehicle_no,
@@ -134,7 +135,7 @@ def assign_vehicles_and_extract_routes(
             "capacity": vehicles[vehicle_id].capacity,
             "route_distance_km": route_distance / 1000,
             "route": mapped_route,
-            "assigned_order_weight": vehicle_weight, 
+            "assigned_order_weight": vehicle_weight,
             "remaining_capacity": vehicles[vehicle_id].capacity - vehicle_weight,
         }
 
