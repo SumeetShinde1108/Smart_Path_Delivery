@@ -45,7 +45,7 @@ def assign_routes_to_delivery(store, orders, vehicles, delivery_date):
     if not orders:
         raise ValueError("ERROR: No orders available for delivery")
 
-    vehicles.sort(key=lambda v: (v.capacity, v.average_speed), reverse=True)
+    vehicles.sort(key=lambda v: (v.capacity, v.average_speed), reverse=False)
     existing_delivery = Delivery.objects.filter(date_of_delivery=delivery_date).first()
     delivery = existing_delivery or Delivery.objects.create(
         store=store,
@@ -120,14 +120,16 @@ def assign_vehicles_and_extract_routes(
 
         route.append(manager.IndexToNode(index))
         assigned_order_ids = [orders[i - 1].id for i in route[1:-1]]
-        mapped_route = ["Wharehouse" if i == 0 else orders[i - 1].order_id for i in route]
+        mapped_route = [
+            "Wharehouse" if i == 0 else orders[i - 1].order_id for i in route
+        ]
 
         if assigned_order_ids:
             routes.append(
                 {
                     "vehicle_no": vehicles[vehicle_id].vehicle_no,
-                    "average_speed":vehicles[vehicle_id].average_speed,
-                    "capacity":vehicles[vehicle_id].capacity,
+                    "average_speed_kmh": vehicles[vehicle_id].average_speed,
+                    "capacity": vehicles[vehicle_id].capacity,
                     "route_distance_km": route_distance / 1000,
                     "route": mapped_route,
                 }
@@ -140,5 +142,4 @@ def assign_vehicles_and_extract_routes(
                 order.save()
 
         total_distance += route_distance
-
-    return {"vehicle_routes": routes, "total_distance_km": total_distance/1000 }
+    return {"vehicle_routes": routes, "total_distance": total_distance / 1000}
