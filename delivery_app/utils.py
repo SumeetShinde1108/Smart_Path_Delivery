@@ -45,7 +45,7 @@ def assign_routes_to_delivery(store, orders, vehicles, delivery_date):
     if not orders:
         raise ValueError("ERROR: No orders available for delivery")
 
-    vehicles.sort(key=lambda v: (v.capacity, v.average_speed), reverse=False)
+    vehicles.sort(key=lambda v: (v.capacity, v.average_speed), reverse=True)
     existing_delivery = Delivery.objects.filter(date_of_delivery=delivery_date).first()
     delivery = existing_delivery or Delivery.objects.create(
         store=store,
@@ -110,6 +110,9 @@ def assign_vehicles_and_extract_routes(
         index = routing.Start(vehicle_id)
         route, route_distance = [], 0
 
+        vehicle_capacity = vehicles[vehicle_id].capacity
+        remaining_capacity = vehicle_capacity  
+
         while not routing.IsEnd(index):
             route.append(manager.IndexToNode(index))
             prev_idx = index
@@ -121,25 +124,33 @@ def assign_vehicles_and_extract_routes(
         route.append(manager.IndexToNode(index))
         assigned_order_ids = [orders[i - 1].id for i in route[1:-1]]
         mapped_route = [
-            "Wharehouse" if i == 0 else orders[i - 1].order_id for i in route
+            "Warehouse" if i == 0 else orders[i - 1].order_id for i in route
         ]
 
         if assigned_order_ids:
-            routes.append(
-                {
-                    "vehicle_no": vehicles[vehicle_id].vehicle_no,
-                    "average_speed_kmh": vehicles[vehicle_id].average_speed,
-                    "capacity": vehicles[vehicle_id].capacity,
-                    "route_distance_km": route_distance / 1000,
-                    "route": mapped_route,
-                }
-            )
+            vehicle_route_info = {
+                "vehicle_no": vehicles[vehicle_id].vehicle_no,
+                "average_speed_kmh": vehicles[vehicle_id].average_speed,
+                "capacity": vehicle_capacity,
+                "route_distance_km": route_distance / 1000,
+                "route": mapped_route,
+                "assigned_order_weight": 0,
+                "remaining_capacity": remaining_capacity,  
+            }
 
             for order_id in assigned_order_ids:
                 order = Order.objects.get(id=order_id)
+                vehicle_route_info["assigned_order_weight"] += order.weight
+                remaining_capacity -= order.weight  
+
                 order.vehicle = vehicles[vehicle_id]
                 order.delivery = delivery
                 order.save()
 
+            vehicle_route_info["remaining_capacity"] = remaining_capacity
+
+            routes.append(vehicle_route_info)
+
         total_distance += route_distance
+
     return {"vehicle_routes": routes, "total_distance": total_distance / 1000}
