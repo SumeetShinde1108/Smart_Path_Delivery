@@ -30,7 +30,7 @@ class LocationAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['order_id', 'weight', 'delivery_location', 'date_of_order']
+    list_display = ['id', 'order_id', 'weight', 'delivery_location', 'date_of_order']
     list_filter = ['date_of_order']
     search_fields = ['order_id', 'delivery_location__address']
     ordering = ['-date_of_order']
