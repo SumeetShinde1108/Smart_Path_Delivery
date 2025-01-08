@@ -128,5 +128,21 @@ class Delivery(models.Model):
                 "The total weight of the delivery must be greater than zero."
             )
 
+    def save(self, *args, **kwargs):
+        if not self.pk:  
+            vehicles = Vehicle.objects.all()
+            if not vehicles.exists():
+                raise ValidationError("No vehicles available for assignment.")
+
+            total_capacity = sum(vehicle.capacity for vehicle in vehicles)
+            if total_capacity < self.total_weight:
+                raise ValidationError(
+                )
+
+            super().save(*args, **kwargs)  
+            self.vehicles.set(vehicles)  
+        else:
+            super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Delivery {self.date_of_delivery} - {self.total_weight} kg"
