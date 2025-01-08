@@ -45,7 +45,7 @@ def assign_routes_to_delivery(store, orders, vehicles, delivery_date):
     if not orders:
         raise ValueError("ERROR: No orders available for delivery")
 
-    vehicles.sort(key=lambda v: (v.capacity, v.average_speed), reverse=True)
+    vehicles.sort(key=lambda v: (v.capacity, v.average_speed), reverse=False)
     existing_delivery = Delivery.objects.filter(date_of_delivery=delivery_date).first()
     delivery = existing_delivery or Delivery.objects.create(
         store=store,
@@ -87,7 +87,10 @@ def assign_routes_to_delivery(store, orders, vehicles, delivery_date):
     search_params.local_search_metaheuristic = (
         routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
     )
-    search_params.time_limit.seconds = 1
+    search_params.time_limit.seconds = 10
+    search_params.first_solution_strategy = (
+        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+    )
 
     solution = routing.SolveWithParameters(search_params)
     if not solution:
