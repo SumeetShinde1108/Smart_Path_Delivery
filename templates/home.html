@@ -141,7 +141,7 @@
                         {% for delivery in deliveries %}
                         <li class="list-group-item">
                             Delivery #{{ delivery.id }} - Store: {{ delivery.store.name }} - Total Weight: {{delivery.total_weight }} kg - Date Of Delivery: {{delivery.date_of_delivery}}
-                            <a href="{% url 'delivery-detail' pk=delivery.id %}"
+                            <a href="{% url 'visuals' delivery.id%}"
                                 class="btn btn-info float-end">Start Optimization</a>
                         </li>
                         {% endfor %}
