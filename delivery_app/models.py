@@ -1,4 +1,5 @@
 from django.contrib.gis.db import models
+from django.core.exceptions import ValidationError
 
 
 class Location(models.Model):
@@ -57,6 +58,11 @@ class Store(models.Model):
     class Meta:
         verbose_name = "Store"
         verbose_name_plural = "03 Stores"
+
+    def save(self, *args, **kwargs):
+        if not self.pk and Store.objects.exists():
+            raise ValidationError("Only one store is allowed in the system.")
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Store name: {self.name}, location: {self.location}"
@@ -129,18 +135,17 @@ class Delivery(models.Model):
             )
 
     def save(self, *args, **kwargs):
-        if not self.pk:  
+        if not self.pk:
             vehicles = Vehicle.objects.all()
             if not vehicles.exists():
                 raise ValidationError("No vehicles available for assignment.")
 
             total_capacity = sum(vehicle.capacity for vehicle in vehicles)
             if total_capacity < self.total_weight:
-                raise ValidationError(
-                )
+                raise ValidationError()
 
-            super().save(*args, **kwargs)  
-            self.vehicles.set(vehicles)  
+            super().save(*args, **kwargs)
+            self.vehicles.set(vehicles)
         else:
             super().save(*args, **kwargs)
 
