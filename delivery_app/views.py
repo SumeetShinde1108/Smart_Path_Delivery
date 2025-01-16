@@ -50,3 +50,50 @@ def add_order(request):
 def add_store(request):
     return render(request, "add_store.html")
 
+
+
+@csrf_exempt
+def add_location(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            store_name = data.get("store_name")
+            address = data.get("address")
+            latitude = data.get("latitude")
+            longitude = data.get("longitude")
+
+            if not all([store_name, address, latitude, longitude]):
+                return JsonResponse({"error": "Missing required fields"}, status=400)
+
+            location = Location.objects.create(
+                address=address, point=f"POINT({longitude} {latitude})"
+            )
+
+            store = Store.objects.create(name=store_name, location=location)
+
+            return JsonResponse(
+                {"message": f"Store '{store_name}' added successfully!"}, status=201
+            )
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON format"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+def add_vehicle(request):
+    return render(request, "add_vehicle.html")
+
+
+def assign_vehicles_to_delivery(request):
+    try:
+        call_command("vehicles_for_delivery")
+        messages.success(
+            request, "Vehicles have been successfully assigned to the delivery."
+        )
+    except Exception as e:
+        messages.error(request, f"Error: {str(e)}")
+    return redirect("home")
+
