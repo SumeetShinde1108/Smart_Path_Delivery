@@ -55,21 +55,21 @@ A system for delivering items to multiple locations by determining the shortest 
     1> All available orders, vehicles, and stores.
     2> The list of currently available deliveries.
     3> Includes a detailed section for available deliveries, dynamically updating based on the algorithm's output.
-![alt text](image.png)
-![alt text](image-1.png)
+![alt text](READMEFileImages/image.png)
+![alt text](READMEFileImages/image-1.png)
 
 #### Add Store page:
     1> Enables users to add new store locations.
     2> Each store includes critical information such as address, coordinates (using PointField), and related details for routing.
-![alt text](image-2.png)
+![alt text](READMEFileImages/image-2.png)
 
 #### Add Order page:
     > Facilitates adding customer orders.
-![alt text](image-3.png)
+![alt text](READMEFileImages/image-3.png)
 
 #### Add Vehicle page:
     > Allows adding vehicles with properties like Weight capacity in kg, Average speed in kmh.
-![alt text](image-4.png)
+![alt text](READMEFileImages/image-4.png)
 
 #### Start Optimization Page:
     > Displays:
@@ -79,8 +79,8 @@ A system for delivering items to multiple locations by determining the shortest 
         4. Orders assigned.
         5. Remaining capacity.
 
-![alt text](image-5.png)
-![alt text](image-6.png)
+![alt text](READMEFileImages/image-5.png)
+![alt text](READMEFileImages/image-6.png)
 
     
 
