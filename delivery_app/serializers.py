@@ -36,3 +36,20 @@ class StoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Store
         fields = ["name", "location"]
+
+
+class VehicleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vehicle
+        fields = ["vehicle_no", "capacity", "average_speed"]
+
+
+class DeliverySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Delivery
+        fields = ["id", "store", "total_weight", "date_of_delivery", "vehicles"]
+
+    def validate(self, data):
+        if data["total_weight"] > sum(vehicle.capacity for vehicle in data["vehicles"]):
+            raise serializers.ValidationError("Total weight exceeds vehicle capacity.")
+        return data
