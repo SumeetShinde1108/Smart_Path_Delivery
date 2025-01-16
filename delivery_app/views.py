@@ -42,3 +42,11 @@ def home(request):
     }
     return render(request, "home.html", context)
 
+
+def add_order(request):
+    return render(request, "add_order.html")
+
+
+def add_store(request):
+    return render(request, "add_store.html")
+
