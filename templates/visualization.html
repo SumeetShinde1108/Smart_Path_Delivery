@@ -151,12 +151,12 @@
 <body>
     <div class="container">
         <h1>Delivery Optimization Maps</h1>
-        <div class="delivery-info">Total Deliveries: 10 | Total Vehicles Used: 5 | Total Distance Covered: 1500 km</div>
+        <div class="delivery-info">Total Deliveries: {{ delivery.orders.count }} | Total Vehicles Used: {{ best_solution|length }}</div>
 
         <div class="map-details-container">
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center">Solution 1</h3>
+                    <h3 class="text-center">Solution 1 <span style="font-size: 1rem;">(Distance: {{ solution1_distance }} km)</span></h3>
                     <div id="map1" class="map-container"></div>
                 </div>
                 <div class="details-column">
@@ -166,7 +166,7 @@
 
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center">Solution 2</h3>
+                    <h3 class="text-center">Solution 2 <span style="font-size: 1rem;">(Distance: {{ solution2_distance }} km)</span></h3>
                     <div id="map2" class="map-container"></div>
                 </div>
                 <div class="details-column">
@@ -176,7 +176,7 @@
 
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center">Solution 3</h3>
+                    <h3 class="text-center">Solution 3 <span style="font-size: 1rem;">(Distance: {{ solution3_distance }} km)</span></h3>
                     <div id="map3" class="map-container"></div>
                 </div>
                 <div class="details-column">
@@ -186,7 +186,7 @@
 
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center text-danger">Best Optimized Route</h3>
+                    <h3 class="text-center text-danger">Best Optimized Route <span style="font-size: 1rem;">(Distance: {{ best_solution_distance }} km)</span></h3>
                     <div id="optimizedMap" class="map-container"></div>
                 </div>
                 <div class="details-column">
@@ -197,7 +197,6 @@
 
         <a href="/" class="btn btn-primary d-block mx-auto btn-back">Back to Dashboard</a>
     </div>
-
 
     <footer>&copy; 2025 Delivery System</footer>
 
@@ -224,18 +223,19 @@
             drawSolutionRoutes(solution1, solutionMaps[0], "details1");
             drawSolutionRoutes(solution2, solutionMaps[1], "details2");
             drawSolutionRoutes(solution3, solutionMaps[2], "details3");
-            drawBestSolutionRoutes(optimizedMap, "optimizedDetails");
+            drawSolutionRoutes(bestSolution, optimizedMap, "optimizedDetails", true);
         }
 
-        function drawSolutionRoutes(routes, map, detailsContainerId) {
+        function drawSolutionRoutes(routes, map, detailsContainerId, isBestSolution = false) {
             const detailsContainer = document.getElementById(detailsContainerId);
             detailsContainer.innerHTML = "";
 
             routes.forEach((vehicleRoute, index) => {
-                drawRoutes(map, vehicleRoute, false);
-                const vehicleColor = getRandomColor();
+                const color = isBestSolution ? "#00FF00" : getRandomColor();
+                drawRoute(map, vehicleRoute.coordinates, color);
+
                 const detail = `
-                    <div class="vehicle-card" style="border-left-color: ${vehicleColor};">
+                    <div class="vehicle-card" style="border-left-color: ${color};">
                         <h5>Vehicle ${index + 1}</h5>
                         <p><strong>Vehicle No:</strong> ${vehicleRoute.vehicle_no}</p>
                         <p><strong>Capacity:</strong> ${vehicleRoute.capacity}</p>
@@ -248,14 +248,10 @@
             });
         }
 
-        function drawBestSolutionRoutes(map, detailsContainerId) {
-            drawSolutionRoutes(bestSolution, map, detailsContainerId);
-        }
+        function drawRoute(map, coordinates, color) {
+            if (!coordinates || !coordinates.length) return;
 
-        function drawRoutes(map, routeData, isBestSolution = false) {
-            if (!routeData || !routeData.coordinates.length) return;
-
-            const pathCoordinates = routeData.coordinates.map(coord => ({
+            const pathCoordinates = coordinates.map(coord => ({
                 lat: coord[0],
                 lng: coord[1]
             }));
@@ -263,9 +259,9 @@
             new google.maps.Polyline({
                 path: pathCoordinates,
                 geodesic: true,
-                strokeColor: isBestSolution ? "#00FF00" : getRandomColor(),
+                strokeColor: color,
                 strokeOpacity: 1.0,
-                strokeWeight: isBestSolution ? 5 : 4,
+                strokeWeight: 4,
             }).setMap(map);
         }
 
@@ -273,8 +269,7 @@
             return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
         }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAnXCHmU_Yd4YraZPXlBkpOQmk-CcfOyGM&callback=initMaps"
-        async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAnXCHmU_Yd4YraZPXlBkpOQmk-CcfOyGM&callback=initMaps" async defer></script>
 </body>
 
 </html>
