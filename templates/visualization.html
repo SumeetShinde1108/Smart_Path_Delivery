@@ -151,12 +151,14 @@
 <body>
     <div class="container">
         <h1>Delivery Optimization Maps</h1>
-        <div class="delivery-info">Total Deliveries: {{ delivery.orders.count }} | Total Vehicles Used: {{ best_solution|length }}</div>
+        <div class="delivery-info">Total Deliveries: {{ delivery.orders.count }} | Total Vehicles Used: {{
+            best_solution|length }}</div>
 
         <div class="map-details-container">
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center">Solution 1 <span style="font-size: 1rem;">(Distance: {{ solution1_distance }} km)</span></h3>
+                    <h3 class="text-center">Solution 1 <span style="font-size: 1rem;">(Distance: {{ solution1_distance
+                            }} km)</span></h3>
                     <div id="map1" class="map-container"></div>
                 </div>
                 <div class="details-column">
@@ -166,7 +168,8 @@
 
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center">Solution 2 <span style="font-size: 1rem;">(Distance: {{ solution2_distance }} km)</span></h3>
+                    <h3 class="text-center">Solution 2 <span style="font-size: 1rem;">(Distance: {{ solution2_distance
+                            }} km)</span></h3>
                     <div id="map2" class="map-container"></div>
                 </div>
                 <div class="details-column">
@@ -176,7 +179,8 @@
 
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center">Solution 3 <span style="font-size: 1rem;">(Distance: {{ solution3_distance }} km)</span></h3>
+                    <h3 class="text-center">Solution 3 <span style="font-size: 1rem;">(Distance: {{ solution3_distance
+                            }} km)</span></h3>
                     <div id="map3" class="map-container"></div>
                 </div>
                 <div class="details-column">
@@ -186,7 +190,8 @@
 
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center text-danger">Best Optimized Route <span style="font-size: 1rem;">(Distance: {{ best_solution_distance }} km)</span></h3>
+                    <h3 class="text-center text-danger">Best Optimized Route <span style="font-size: 1rem;">(Distance:
+                            {{ best_solution_distance }} km)</span></h3>
                     <div id="optimizedMap" class="map-container"></div>
                 </div>
                 <div class="details-column">
@@ -223,15 +228,17 @@
             drawSolutionRoutes(solution1, solutionMaps[0], "details1");
             drawSolutionRoutes(solution2, solutionMaps[1], "details2");
             drawSolutionRoutes(solution3, solutionMaps[2], "details3");
-            drawSolutionRoutes(bestSolution, optimizedMap, "optimizedDetails", true);
+            drawSolutionRoutes(bestSolution, optimizedMap, "optimizedDetails");
         }
 
-        function drawSolutionRoutes(routes, map, detailsContainerId, isBestSolution = false) {
+        function drawSolutionRoutes(routes, map, detailsContainerId) {
             const detailsContainer = document.getElementById(detailsContainerId);
             detailsContainer.innerHTML = "";
 
             routes.forEach((vehicleRoute, index) => {
-                const color = isBestSolution ? "#00FF00" : getRandomColor();
+                const color = getRandomColor();
+                vehicleRoute.color = color;
+
                 drawRoute(map, vehicleRoute.coordinates, color);
 
                 const detail = `
@@ -269,7 +276,9 @@
             return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
         }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAnXCHmU_Yd4YraZPXlBkpOQmk-CcfOyGM&callback=initMaps" async defer></script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAnXCHmU_Yd4YraZPXlBkpOQmk-CcfOyGM&callback=initMaps"
+        async defer></script>
 </body>
 
 </html>
