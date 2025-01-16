@@ -284,3 +284,30 @@ def optimization_visualizations(request, delivery_id):
 
     return render(request, "visualization.html", context)
 
+    
+class DeliveryListByDateView(View):
+    def get(self, request, *args, **kwargs):
+        delivery_date = request.GET.get("delivery_date")
+
+        try:
+            delivery_date = datetime.strptime(delivery_date, "%Y-%m-%d").date()
+        except ValueError:
+            return render(request, "error.html", {"message": "Invalid date format."})
+
+        deliveries = Delivery.objects.filter(
+            date_of_delivery=delivery_date
+        ).prefetch_related("orders", "vehicles")
+
+        if not deliveries:
+            return render(
+                request,
+                "error.html",
+                {"message": "No deliveries found for the given date."},
+            )
+
+        return render(
+            request,
+            "delivery_list_by_date.html",
+            {"deliveries": deliveries, "delivery_date": delivery_date},
+        )
+
