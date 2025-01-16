@@ -174,3 +174,27 @@ class VehicleViewSet(viewsets.ModelViewSet):
     queryset = Vehicle.objects.all()
     serializer_class = VehicleSerializer
 
+
+class DeliveryDetailAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            delivery_id = kwargs.get("pk")
+            delivery = Delivery.objects.prefetch_related("orders", "vehicles").get(
+                id=delivery_id
+            )
+
+            store = delivery.store
+            orders = list(delivery.orders.all())
+            vehicles = list(delivery.vehicles.all())
+
+            logging.debug(f"Store: {store}, Orders: {orders}, Vehicles: {vehicles}")
+
+            solution = assign_routes_to_delivery(
+                store, orders, vehicles, delivery.date_of_delivery
+            )
+            return Response(solution, status=status.HTTP_200_OK)
+        except Delivery.DoesNotExist:
+            return Response(
+                {"error": "Delivery not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
