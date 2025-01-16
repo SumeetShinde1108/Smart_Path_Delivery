@@ -136,3 +136,41 @@ def add_location_and_order(request):
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
+
+class LocationViewSet(viewsets.ModelViewSet):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+
+    def create(self, request, *args, **kwargs):
+        location_data = request.data.pop("delivery_location", None)
+        if location_data:
+            location_serializer = LocationSerializer(data=location_data)
+            if location_serializer.is_valid():
+                location = location_serializer.save()
+                request.data["delivery_location"] = location.id
+        return super().create(request, *args, **kwargs)
+
+
+class StoreViewSet(viewsets.ModelViewSet):
+    queryset = Store.objects.all()
+    serializer_class = StoreSerializer
+
+    def create(self, request, *args, **kwargs):
+        location_data = request.data.pop("location", None)
+        if location_data:
+            location_serializer = LocationSerializer(data=location_data)
+            if location_serializer.is_valid():
+                location = location_serializer.save()
+                request.data["location"] = location.id
+        return super().create(request, *args, **kwargs)
+
+
+class VehicleViewSet(viewsets.ModelViewSet):
+    queryset = Vehicle.objects.all()
+    serializer_class = VehicleSerializer
+
