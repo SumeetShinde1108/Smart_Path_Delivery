@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: Arial, sans-serif;
             background-color: #f4f4f9;
             color: #333;
             margin: 0;
@@ -21,8 +21,8 @@
             margin: 20px auto;
             padding: 20px;
             background: #fff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
 
         h1 {
@@ -30,13 +30,22 @@
             margin-bottom: 20px;
             font-size: 2.5rem;
             color: #007bff;
-            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
 
         .delivery-info {
-            background: #e3f2fd;
+            background: #f0f8ff;
             padding: 12px 20px;
-            border-radius: 10px;
+            border-radius: 8px;
             margin-bottom: 25px;
             text-align: center;
             font-size: 1.2rem;
@@ -55,25 +64,15 @@
         .details-card {
             background-color: #f8f9fa;
             border-radius: 8px;
-            padding: 15px;
+            padding: 20px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            width: 280px;
-            max-height: 350px;
-            overflow-y: auto;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 20px;
         }
 
-        .details-card h4 {
-            color: #007bff;
-            font-weight: bold;
-        }
-
-        .details-card::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        .details-card::-webkit-scrollbar-thumb {
-            background: #007bff;
-            border-radius: 5px;
+        .details-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .vehicle-card {
@@ -83,6 +82,12 @@
             border-radius: 8px;
             margin-bottom: 4px;
             box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .vehicle-card:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
         }
 
         .map-details-container {
@@ -97,7 +102,6 @@
             flex-wrap: wrap;
             gap: 25px;
             align-items: flex-start;
-            padding-bottom: 20px;
         }
 
         .map-column {
@@ -110,7 +114,9 @@
             min-width: 300px;
             height: 100%;
             overflow-y: auto;
+            max-height: 450px;
         }
+
 
         .btn-back {
             display: block;
@@ -124,6 +130,7 @@
             padding: 10px;
             border-radius: 5px;
             text-decoration: none;
+            transition: background-color 0.2s ease;
         }
 
         .btn-back:hover {
@@ -150,9 +157,9 @@
 
 <body>
     <div class="container">
-        <h1>Delivery Optimization Maps</h1>
-        <div class="delivery-info">Total Deliveries: {{ delivery.orders.count }} | Total Vehicles Used: {{
-            best_solution|length }}</div>
+        <h1>Optmized Routes</h1>
+        <div class="delivery-info">Total Deliveries: {{ delivery.orders.count }} | Total Vehicles: {{ vehicles|length }}
+        </div>
 
         <div class="map-details-container">
             <div class="map-details">
@@ -211,6 +218,12 @@
         const solution3 = JSON.parse('{{ solution3|escapejs }}');
         const bestSolution = JSON.parse('{{ best_solution|escapejs }}');
 
+        const darkColors = [
+            '#2C3E50', '#34495E', '#1ABC9C', '#16A085', '#27AE60',
+            '#2ECC71', '#2980B9', '#8E44AD', '#9B59B6', '#F39C12',
+            '#F1C40F', '#E67E22', '#D35400', '#C0392B', '#7F8C8D'
+        ];
+
         function initMaps() {
             const mapOptions = {
                 zoom: 8,
@@ -236,7 +249,8 @@
             detailsContainer.innerHTML = "";
 
             routes.forEach((vehicleRoute, index) => {
-                const color = getRandomColor();
+                // Cycle through the dark colors array
+                const color = darkColors[index % darkColors.length];  // Cycle through the colors if there are more than 15 vehicles
                 vehicleRoute.color = color;
 
                 drawRoute(map, vehicleRoute.coordinates, color);
@@ -271,11 +285,9 @@
                 strokeWeight: 4,
             }).setMap(map);
         }
-
-        function getRandomColor() {
-            return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-        }
     </script>
+
+
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAnXCHmU_Yd4YraZPXlBkpOQmk-CcfOyGM&callback=initMaps"
         async defer></script>
