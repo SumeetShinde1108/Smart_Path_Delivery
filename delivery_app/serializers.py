@@ -29,3 +29,10 @@ class OrderSerializer(serializers.ModelSerializer):
             instance.delivery_location.save()
         return super().update(instance, validated_data)
 
+
+class StoreSerializer(serializers.ModelSerializer):
+    location = LocationSerializer()
+
+    class Meta:
+        model = Store
+        fields = ["name", "location"]
