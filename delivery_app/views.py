@@ -51,7 +51,6 @@ def add_store(request):
     return render(request, "add_store.html")
 
 
-
 @csrf_exempt
 def add_location(request):
     if request.method == "POST":
@@ -284,7 +283,7 @@ def optimization_visualizations(request, delivery_id):
 
     return render(request, "visualization.html", context)
 
-    
+
 class DeliveryListByDateView(View):
     def get(self, request, *args, **kwargs):
         delivery_date = request.GET.get("delivery_date")
@@ -311,3 +310,30 @@ class DeliveryListByDateView(View):
             {"deliveries": deliveries, "delivery_date": delivery_date},
         )
 
+
+@csrf_protect
+def add_vehicle_data(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+
+        vehicle_no = data.get("vehicle_no")
+        capacity = data.get("capacity")
+        average_speed = data.get("average_speed")
+
+        if not all([vehicle_no, capacity, average_speed]):
+            return JsonResponse({"error": "All fields are required."}, status=400)
+
+        try:
+            vehicle = Vehicle.objects.create(
+                vehicle_no=vehicle_no,
+                capacity=capacity,
+                average_speed=average_speed,
+            )
+            return JsonResponse({"message": "Vehicle added successfully!"}, status=201)
+        except IntegrityError:
+            return JsonResponse({"error": "Vehicle number must be unique."}, status=400)
+
+    return JsonResponse({"error": "Invalid request method."}, status=405)
