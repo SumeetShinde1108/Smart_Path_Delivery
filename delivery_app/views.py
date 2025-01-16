@@ -198,3 +198,89 @@ class DeliveryDetailAPIView(APIView):
                 {"error": "Delivery not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
+
+def optimization_visualizations(request, delivery_id):
+    delivery = get_object_or_404(Delivery, id=delivery_id)
+    api_url = f"{settings.SITE_URL}/delivery/{delivery_id}/"
+
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        optimization_data = response.json()
+    except requests.RequestException as e:
+        logger.error(f"Failed to fetch optimization data: {e}")
+        return render(
+            request, "error.html", {"message": "Unable to fetch optimization data."}
+        )
+
+    solution1_routes = optimization_data[0].get("vehicle_routes", [])
+    solution2_routes = optimization_data[1].get("vehicle_routes", [])
+    solution3_routes = optimization_data[2].get("vehicle_routes", [])
+
+    def process_routes(routes):
+        processed_routes = []
+        for route in routes:
+            try:
+                vehicle_no = route.get("vehicle_no", "Unknown Vehicle")
+                route_distance_km = route.get("route_distance_km", float("inf"))
+                assigned_order_weight = route.get("assigned_order_weight", 0)
+                average_speed_kmh = route.get("average_speed_kmh", 0)
+                remaining_capacity = route.get("remaining_capacity", 0)
+                capacity = route.get("capacity", 0)
+                coordinates = [
+                    [coord["coordinates"][0], coord["coordinates"][1]]
+                    for coord in route.get("route", [])
+                    if coord.get("coordinates")
+                ]
+
+                processed_routes.append(
+                    {
+                        "vehicle_no": vehicle_no,
+                        "route_distance_km": route_distance_km,
+                        "assigned_order_weight": assigned_order_weight,
+                        "average_speed_kmh": average_speed_kmh,
+                        "remaining_capacity": remaining_capacity,
+                        "capacity": capacity,
+                        "coordinates": coordinates,
+                    }
+                )
+
+            except Exception as e:
+                logger.warning(f"Error processing route data: {route}. Error: {e}")
+        return processed_routes
+
+    solution1 = process_routes(solution1_routes)
+    solution2 = process_routes(solution2_routes)
+    solution3 = process_routes(solution3_routes)
+
+    def total_distance(routes):
+        return sum(route["route_distance_km"] for route in routes)
+
+    total_distance_solution1 = total_distance(solution1)
+    total_distance_solution2 = total_distance(solution2)
+    total_distance_solution3 = total_distance(solution3)
+
+    best_solution = min(
+        [
+            (solution1, total_distance_solution1),
+            (solution2, total_distance_solution2),
+            (solution3, total_distance_solution3),
+        ],
+        key=lambda x: x[1],
+    )[0]
+
+    context = {
+        "delivery": delivery,
+        "solution1": json.dumps(solution1),
+        "solution2": json.dumps(solution2),
+        "solution3": json.dumps(solution3),
+        "best_solution": json.dumps(best_solution),
+    }
+
+    print("solution 1:", solution1)
+    print("solution 2:", solution2)
+    print("solution 3:", solution3)
+    print("best solution:", best_solution)
+
+    return render(request, "visualization.html", context)
+
