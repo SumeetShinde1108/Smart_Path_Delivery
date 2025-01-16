@@ -97,3 +97,42 @@ def assign_vehicles_to_delivery(request):
         messages.error(request, f"Error: {str(e)}")
     return redirect("home")
 
+
+@csrf_exempt
+def add_location_and_order(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            order_id = data.get("order_id")
+            weight = data.get("weight")
+            date_of_order = data.get("date_of_order")
+            address = data.get("address")
+            latitude = data.get("latitude")
+            longitude = data.get("longitude")
+
+            if not all([order_id, weight, date_of_order, address, latitude, longitude]):
+                return JsonResponse({"error": "Missing required fields"}, status=400)
+
+            latitude = float(latitude)
+            longitude = float(longitude)
+
+            location = Location.objects.create(
+                address=address, point=f"POINT({longitude} {latitude})"
+            )
+
+            order = Order.objects.create(
+                order_id=order_id,
+                weight=float(weight),
+                date_of_order=date_of_order,
+                delivery_location=location,
+            )
+
+            return JsonResponse({"message": "Order added successfully!"}, status=201)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON format"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
