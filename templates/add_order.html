@@ -184,20 +184,20 @@
                         longitude: longitude
                     }),
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    alert(data.message || data.error || "Unexpected error");
-                    window.location.reload();
-                })
-                .catch(error => {
-                    console.error("Fetch Error:", error);
-                    alert("An error occurred while adding the order.");
-                });
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        alert(data.message || data.error || "Unexpected error");
+                        window.location.reload();
+                    })
+                    .catch(error => {
+                        console.error("Fetch Error:", error);
+                        alert("An error occurred while adding the order.");
+                    });
             });
         });
     </script>
