@@ -32,16 +32,6 @@
             color: #007bff;
         }
 
-        @keyframes fadeIn {
-            0% {
-                opacity: 0;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-
         .delivery-info {
             background: #f0f8ff;
             padding: 12px 20px;
@@ -61,62 +51,31 @@
             border: 2px solid #007bff;
         }
 
-        .details-card {
+        .table-container {
+            margin-top: 20px;
+        }
+
+        .vehicle-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .vehicle-table th,
+        .vehicle-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .vehicle-table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .vehicle-table td {
             background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            margin-bottom: 20px;
         }
-
-        .details-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .vehicle-card {
-            padding: 12px;
-            border-left: 5px solid #007bff;
-            background: #ffffff;
-            border-radius: 8px;
-            margin-bottom: 4px;
-            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
-            transition: background-color 0.2s ease, transform 0.2s ease;
-        }
-
-        .vehicle-card:hover {
-            background: #e9ecef;
-            transform: translateX(5px);
-        }
-
-        .map-details-container {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            padding: 10px 0;
-        }
-
-        .map-details {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 25px;
-            align-items: flex-start;
-        }
-
-        .map-column {
-            flex: 2;
-            min-width: 600px;
-        }
-
-        .details-column {
-            flex: 1;
-            min-width: 300px;
-            height: 100%;
-            overflow-y: auto;
-            max-height: 450px;
-        }
-
 
         .btn-back {
             display: block;
@@ -130,7 +89,6 @@
             padding: 10px;
             border-radius: 5px;
             text-decoration: none;
-            transition: background-color 0.2s ease;
         }
 
         .btn-back:hover {
@@ -157,52 +115,104 @@
 
 <body>
     <div class="container">
-        <h1>Optmized Routes</h1>
-        <div class="delivery-info">Total Deliveries: {{ delivery.orders.count }} | Total Vehicles: {{ vehicles|length }}
+        <h1>Optimized Routes</h1>
+        <div class="delivery-info">Total Deliveries: {{ delivery.orders.count }}
         </div>
 
         <div class="map-details-container">
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center">Solution 1 <span style="font-size: 1rem;">(Distance: {{ solution1_distance
-                            }} km)</span></h3>
+                    <h3 id="solution1Heading" class="text-center text-primary">
+                        Solution by Greedy Algorithm <span style="font-size: 1rem;">( Distance: {{ solution1_distance }}km)</span>
+                    </h3>
                     <div id="map1" class="map-container"></div>
                 </div>
-                <div class="details-column">
-                    <div id="details1" class="details-card"></div>
+                <div class="table-container">
+                    <table class="vehicle-table">
+                        <thead>
+                            <tr>
+                                <th>Vehicle No</th>
+                                <th>Capacity</th>
+                                <th>Vehicle Path</th>
+                                <th>Carrying Weight</th>
+                                <th>Remaining Weight</th>
+                                <th>Total Route Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="solution1Table"></tbody>
+                    </table>
                 </div>
             </div>
 
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center">Solution 2 <span style="font-size: 1rem;">(Distance: {{ solution2_distance
-                            }} km)</span></h3>
+                    <h3 id="solution2Heading" class="text-center text-primary">
+                        Solution by Paraller Cheapest Insertion <span style="font-size: 1rem;">( Distance: {{solution2_distance }} km)</span>
+                    </h3>
                     <div id="map2" class="map-container"></div>
                 </div>
-                <div class="details-column">
-                    <div id="details2" class="details-card"></div>
+                <div class="table-container">
+                    <table class="vehicle-table">
+                        <thead>
+                            <tr>
+                                <th>Vehicle No</th>
+                                <th>Capacity</th>
+                                <th>Vehicle Path</th>
+                                <th>Carrying Weight</th>
+                                <th>Remaining Weight</th>
+                                <th>Total Route Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="solution2Table"></tbody>
+                    </table>
                 </div>
             </div>
 
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center">Solution 3 <span style="font-size: 1rem;">(Distance: {{ solution3_distance
-                            }} km)</span></h3>
+                    <h3 id="solution3Heading" class="text-center text-primary">
+                        Solution by Savings Heuristic Algorithm <span style="font-size: 1rem;">( Distance: {{solution3_distance }} km)</span>
+                    </h3>
                     <div id="map3" class="map-container"></div>
                 </div>
-                <div class="details-column">
-                    <div id="details3" class="details-card"></div>
+                <div class="table-container">
+                    <table class="vehicle-table">
+                        <thead>
+                            <tr>
+                                <th>Vehicle No</th>
+                                <th>Capacity</th>
+                                <th>Vehicle Path</th>
+                                <th>Carrying Weight</th>
+                                <th>Remaining Weight</th>
+                                <th>Total Route Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="solution3Table"></tbody>
+                    </table>
                 </div>
             </div>
 
             <div class="map-details">
                 <div class="map-column">
-                    <h3 class="text-center text-danger">Best Optimized Route <span style="font-size: 1rem;">(Distance:
-                            {{ best_solution_distance }} km)</span></h3>
+                    <h3 id="bestSolutionHeading" class="text-center text-primary">
+                        Best Optimized Route <span style="font-size: 1rem;">( Distance: {{ best_solution_distance }}km)</span>
+                    </h3>
                     <div id="optimizedMap" class="map-container"></div>
                 </div>
-                <div class="details-column">
-                    <div id="optimizedDetails" class="details-card"></div>
+                <div class="table-container">
+                    <table class="vehicle-table">
+                        <thead>
+                            <tr>
+                                <th>Vehicle No</th>
+                                <th>Capacity</th>
+                                <th>Vehicle Path</th>
+                                <th>Carrying Weight</th>
+                                <th>Remaining Weight</th>
+                                <th>Total Route Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="optimizedTable"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -216,7 +226,7 @@
         const solution1 = JSON.parse('{{ solution1|escapejs }}');
         const solution2 = JSON.parse('{{ solution2|escapejs }}');
         const solution3 = JSON.parse('{{ solution3|escapejs }}');
-        const bestSolution = JSON.parse('{{ best_solution|escapejs }}');
+        const bestSolution = JSON.parse('{{ best_solution_json|escapejs }}');
 
         const darkColors = [
             '#2C3E50', '#34495E', '#1ABC9C', '#16A085', '#27AE60',
@@ -238,43 +248,54 @@
 
             const optimizedMap = new google.maps.Map(document.getElementById('optimizedMap'), mapOptions);
 
-            drawSolutionRoutes(solution1, solutionMaps[0], "details1");
-            drawSolutionRoutes(solution2, solutionMaps[1], "details2");
-            drawSolutionRoutes(solution3, solutionMaps[2], "details3");
-            drawSolutionRoutes(bestSolution, optimizedMap, "optimizedDetails");
+            drawSolutionRoutes(solution1, solutionMaps[0], "solution1Table", "solution1Heading");
+            drawSolutionRoutes(solution2, solutionMaps[1], "solution2Table", "solution2Heading");
+            drawSolutionRoutes(solution3, solutionMaps[2], "solution3Table", "solution3Heading");
+            drawSolutionRoutes(bestSolution, optimizedMap, "optimizedTable", "bestSolutionHeading");
         }
 
-        function drawSolutionRoutes(routes, map, detailsContainerId) {
-            const detailsContainer = document.getElementById(detailsContainerId);
-            detailsContainer.innerHTML = "";
+        function drawSolutionRoutes(routes, map, tableContainerId, headingId) {
+            const tableContainer = document.getElementById(tableContainerId);
+            tableContainer.innerHTML = "";
 
-            routes.forEach((vehicleRoute, index) => {
-                // Cycle through the dark colors array
-                const color = darkColors[index % darkColors.length];  // Cycle through the colors if there are more than 15 vehicles
+            const headingElement = document.getElementById(headingId);
+
+            const filteredRoutes = routes.filter(vehicleRoute => {
+                const hasValidWeight = vehicleRoute.assigned_order_weight > 0;
+                const hasValidRoute = vehicleRoute.vehicle_path && vehicleRoute.vehicle_path.length > 1;
+                return hasValidWeight && hasValidRoute;
+            });
+
+            const totalVehicles = filteredRoutes.length;
+            headingElement.innerHTML = `${headingElement.innerHTML} <span style="font-size: 1rem;">(Vehicles: ${totalVehicles})</span>`;
+
+
+            filteredRoutes.forEach((vehicleRoute, index) => {
+                const color = darkColors[index % darkColors.length];
                 vehicleRoute.color = color;
 
-                drawRoute(map, vehicleRoute.coordinates, color);
+                drawRoute(map, vehicleRoute.vehicle_path, color);
 
-                const detail = `
-                    <div class="vehicle-card" style="border-left-color: ${color};">
-                        <h5>Vehicle ${index + 1}</h5>
-                        <p><strong>Vehicle No:</strong> ${vehicleRoute.vehicle_no}</p>
-                        <p><strong>Capacity:</strong> ${vehicleRoute.capacity}</p>
-                        <p><strong>Carrying Weight:</strong> ${vehicleRoute.assigned_order_weight}</p>
-                        <p><strong>Remaining Capacity:</strong> ${vehicleRoute.remaining_capacity}</p>
-                        <p><strong>Total Distance:</strong> ${vehicleRoute.route_distance_km.toFixed(2)} km</p>
-                    </div>
+                const vehicleRow = `
+                    <tr>
+                        <td>${vehicleRoute.vehicle_no}</td>
+                        <td>${vehicleRoute.capacity}</td>
+                        <td>${vehicleRoute.vehicle_path.map(loc => loc.location).join(' → ')}</td>
+                        <td>${vehicleRoute.assigned_order_weight}</td>
+                        <td>${vehicleRoute.remaining_capacity}</td>
+                        <td>${vehicleRoute.route_distance_km.toFixed(2)} km</td>
+                    </tr>
                 `;
-                detailsContainer.innerHTML += detail;
+                tableContainer.innerHTML += vehicleRow;
             });
         }
 
-        function drawRoute(map, coordinates, color) {
-            if (!coordinates || !coordinates.length) return;
+        function drawRoute(map, vehiclePath, color) {
+            if (!vehiclePath || vehiclePath.length < 2) return;
 
-            const pathCoordinates = coordinates.map(coord => ({
-                lat: coord[0],
-                lng: coord[1]
+            const pathCoordinates = vehiclePath.map(loc => ({
+                lat: loc.coordinates[0],
+                lng: loc.coordinates[1],
             }));
 
             new google.maps.Polyline({
@@ -285,12 +306,14 @@
                 strokeWeight: 4,
             }).setMap(map);
         }
+
+        google.maps.event.addDomListener(window, 'load', initMaps);
+
     </script>
-
-
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAnXCHmU_Yd4YraZPXlBkpOQmk-CcfOyGM&callback=initMaps"
         async defer></script>
+
 </body>
 
 </html>
