@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Vehicle - Delivery System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f6f9fc;
+            color: #333;
+            font-family: 'Arial', sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 40px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+
+        .form-container {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 30px;
+        }
+
+        .form-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-label {
+            font-size: 16px;
+            color: #555;
+        }
+
+        .form-control {
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .btn-submit {
+            display: block;
+            margin: 20px auto;
+            background-color: #3498db;
+            color: #ffffff;
+            font-weight: bold;
+            padding: 12px 20px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .btn-submit:hover {
+            background-color: #2980b9;
+        }
+
+        .text-center button {
+            font-size: 16px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Add Vehicle</h1>
+
+        <div class="form-container">
+            <form id="vehicleForm">
+                <div class="mb-3">
+                    <label class="form-label">Vehicle Number:</label>
+                    <input type="text" id="vehicle_no" class="form-control" placeholder="Enter vehicle number" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Capacity (kg):</label>
+                    <input type="number" id="capacity" class="form-control" placeholder="Enter vehicle capacity" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Average Speed (km/h):</label>
+                    <input type="number" id="average_speed" class="form-control" placeholder="Enter vehicle average speed" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function getCSRFToken() {
+            let csrfToken = null;
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.startsWith('csrftoken=')) {
+                    csrfToken = cookie.substring('csrftoken='.length);
+                    break;
+                }
+            }
+            return csrfToken;
+        }
+
+        document.getElementById("vehicleForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const vehicleData = {
+                vehicle_no: document.getElementById("vehicle_no").value,
+                capacity: document.getElementById("capacity").value,
+                average_speed: document.getElementById("average_speed").value,
+            };
+
+            fetch("/api/add_vehicle/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken(),
+                },
+                body: JSON.stringify(vehicleData),
+            })
+            
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || "Vehicle added successfully!");
+            })
+            .catch(error => {
+                alert("Error adding vehicle: " + error.message);
+            });
+        });
+    </script>
+</body>
+</html>
