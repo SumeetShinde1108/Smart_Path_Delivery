@@ -1,5 +1,5 @@
 """
-WSGI config for Delivery project.
+WSGI config for delivery project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Delivery.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'delivery.settings')
 
 application = get_wsgi_application()

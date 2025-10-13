@@ -108,13 +108,13 @@ class Delivery(models.Model):
         help_text="Combined weight of all orders for this delivery in kilograms"
     )
     date_of_delivery = models.DateField(
-        unique=True, help_text="Delivery date (only one delivery per day)"
+        unique=True, help_text="delivery date (only one delivery per day)"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Delivery"
+        verbose_name = "delivery"
         verbose_name_plural = "05 Deliveries"
         ordering = ["-date_of_delivery"]
 
@@ -145,4 +145,4 @@ class Delivery(models.Model):
             super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Delivery {self.date_of_delivery} - {self.total_weight} kg"
+        return f"delivery {self.date_of_delivery} - {self.total_weight} kg"

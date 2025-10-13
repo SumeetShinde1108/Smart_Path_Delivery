@@ -1,8 +1,6 @@
 import os 
 from pathlib import Path
 
-GDAL_LIBRARY_PATH= r'C:\OSGeo4W\bin\gdal309.dll'
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -78,11 +76,12 @@ DATABASES = {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME':'geodjango',
         'USER':'postgres',
-        'PASSWORD':'superuser',
+        'PASSWORD':'newpassword',
         'HOST':'localhost',
         'PORT':'5432',
     }
 }
+
 
 
 # Password validation

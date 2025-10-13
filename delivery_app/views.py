@@ -194,7 +194,7 @@ class DeliveryDetailAPIView(APIView):
             return Response(solution, status=status.HTTP_200_OK)
         except Delivery.DoesNotExist:
             return Response(
-                {"error": "Delivery not found"}, status=status.HTTP_404_NOT_FOUND
+                {"error": "delivery not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
 
