@@ -13,7 +13,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ["id", "order_id", "weight", "delivery_location", "date_of_order"]
+        fields = ["id", "order_id", "weight",
+                  "delivery_location", "date_of_order"]
 
     def create(self, validated_data):
         location_data = validated_data.pop("delivery_location")
@@ -47,7 +48,8 @@ class VehicleSerializer(serializers.ModelSerializer):
 class DeliverySerializer(serializers.ModelSerializer):
     class Meta:
         model = Delivery
-        fields = ["id", "store", "total_weight", "date_of_delivery", "vehicles"]
+        fields = ["id", "store", "total_weight",
+                  "date_of_delivery", "vehicles"]
 
     def validate(self, data):
         if data["total_weight"] > sum(vehicle.capacity for vehicle in data["vehicles"]):
