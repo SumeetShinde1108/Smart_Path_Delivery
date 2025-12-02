@@ -2,7 +2,9 @@ import json
 import logging
 import requests
 from datetime import datetime
+from io import StringIO
 from django.views import View
+from django.urls import reverse
 from django.conf import settings
 from django.contrib import messages
 from django.http import JsonResponse
@@ -11,7 +13,7 @@ from rest_framework.views import APIView
 from django.contrib.gis.geos import Point
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from django.core.management import call_command
+from django.core.management import call_command, CommandError
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 from delivery_app.utils import assign_routes_to_delivery
@@ -87,11 +89,22 @@ def add_vehicle(request):
 
 
 def assign_vehicles_to_delivery(request):
+    stdout = StringIO()
+    stderr = StringIO()
     try:
-        call_command("vehicles_for_delivery")
-        messages.success(
-            request, "Vehicles have been successfully assigned to the delivery."
-        )
+        call_command("vehicles_for_delivery", stdout=stdout, stderr=stderr)
+
+        error_msg = stderr.getvalue().strip()
+        success_msg = stdout.getvalue().strip()
+
+        if error_msg:
+            messages.error(request, error_msg)
+        elif success_msg:
+            messages.success(request, success_msg)
+        else:
+            messages.info(request, "No deliveries required vehicle assignment.")
+    except CommandError as e:
+        messages.error(request, str(e))
     except Exception as e:
         messages.error(request, f"Error: {str(e)}")
     return redirect("home")
@@ -186,6 +199,25 @@ class DeliveryDetailAPIView(APIView):
             orders = list(delivery.orders.all())
             vehicles = list(delivery.vehicles.all())
 
+            if not vehicles:
+                vehicles = list(Vehicle.objects.all())
+            else:
+                total_capacity = sum(vehicle.capacity for vehicle in vehicles)
+                total_weight = sum(order.weight for order in orders)
+
+                if total_capacity < total_weight:
+                    existing_ids = {vehicle.id for vehicle in vehicles}
+                    for vehicle in Vehicle.objects.exclude(id__in=existing_ids).order_by(
+                        "-average_speed", "-capacity"
+                    ):
+                        vehicles.append(vehicle)
+                        total_capacity += vehicle.capacity
+                        existing_ids.add(vehicle.id)
+                        if total_capacity >= total_weight:
+                            break
+
+    
+
             logging.debug(f"Store: {store}, Orders: {orders}, Vehicles: {vehicles}")
 
             solution = assign_routes_to_delivery(
@@ -196,11 +228,25 @@ class DeliveryDetailAPIView(APIView):
             return Response(
                 {"error": "delivery not found"}, status=status.HTTP_404_NOT_FOUND
             )
+        except ValueError as e:
+            logger.warning(f"Route generation failed for delivery {kwargs.get('pk')}: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(
+                f"Unexpected error generating routes for delivery {kwargs.get('pk')}: {e}",
+                exc_info=True,
+            )
+            return Response(
+                {"error": "internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 def optimization_visualizations(request, delivery_id):
     delivery = get_object_or_404(Delivery, id=delivery_id)
-    api_url = f"{settings.SITE_URL}/delivery/{delivery_id}/"
+    api_url = request.build_absolute_uri(
+        reverse("delivery-detail", kwargs={"pk": delivery_id})
+    )
 
     try:
         response = requests.get(api_url)
@@ -208,9 +254,8 @@ def optimization_visualizations(request, delivery_id):
         optimization_data = response.json()
     except requests.RequestException as e:
         logger.error(f"Failed to fetch optimization data: {e}")
-        return render(
-            request, "error.html", {"message": "Unable to fetch optimization data."}
-        )
+        messages.error(request, "Unable to fetch optimization data. Please try again later.")
+        return redirect("home")
 
     solution1_routes = optimization_data[0].get("vehicle_routes", [])
     solution2_routes = optimization_data[1].get("vehicle_routes", [])
@@ -221,16 +266,23 @@ def optimization_visualizations(request, delivery_id):
         for route in routes:
             try:
                 vehicle_no = route.get("vehicle_no", "Unknown Vehicle")
-                route_distance_km = route.get("route_distance_km", float("inf"))
-                assigned_order_weight = route.get("assigned_order_weight", 0)
-                average_speed_kmh = route.get("average_speed_kmh", 0)
-                remaining_capacity = route.get("remaining_capacity", 0)
-                capacity = route.get("capacity", 0)
-                coordinates = [
-                    [coord["coordinates"][0], coord["coordinates"][1]]
-                    for coord in route.get("route", [])
-                    if coord.get("coordinates")
-                ]
+                route_distance_km = float(route.get("route_distance_km", 0))
+                assigned_order_weight = float(route.get("assigned_order_weight", 0))
+                average_speed_kmh = float(route.get("average_speed_kmh", 0))
+                remaining_capacity = float(route.get("remaining_capacity", 0))
+                capacity = float(route.get("capacity", 0))
+
+                vehicle_path = []
+                for coord in route.get("route", []):
+                    coordinates = coord.get("coordinates")
+                    if not coordinates or len(coordinates) != 2:
+                        continue
+                    vehicle_path.append(
+                        {
+                            "location": coord.get("location", "Unknown"),
+                            "coordinates": [coordinates[0], coordinates[1]],
+                        }
+                    )
 
                 processed_routes.append(
                     {
@@ -240,7 +292,7 @@ def optimization_visualizations(request, delivery_id):
                         "average_speed_kmh": average_speed_kmh,
                         "remaining_capacity": remaining_capacity,
                         "capacity": capacity,
-                        "coordinates": coordinates,
+                        "vehicle_path": vehicle_path,
                     }
                 )
 
@@ -255,18 +307,19 @@ def optimization_visualizations(request, delivery_id):
     def total_distance(routes):
         return sum(route["route_distance_km"] for route in routes)
 
-    total_distance_solution1 = total_distance(solution1)
-    total_distance_solution2 = total_distance(solution2)
-    total_distance_solution3 = total_distance(solution3)
+    total_distance_solution1 = round(total_distance(solution1), 2)
+    total_distance_solution2 = round(total_distance(solution2), 2)
+    total_distance_solution3 = round(total_distance(solution3), 2)
 
-    best_solution = min(
-        [
-            (solution1, total_distance_solution1),
-            (solution2, total_distance_solution2),
-            (solution3, total_distance_solution3),
-        ],
-        key=lambda x: x[1],
-    )[0]
+    solutions_with_distance = [
+        (solution1, total_distance_solution1),
+        (solution2, total_distance_solution2),
+        (solution3, total_distance_solution3),
+    ]
+
+    best_solution, best_solution_distance = min(
+        solutions_with_distance, key=lambda x: x[1] if x[1] > 0 else float("inf")
+    )
 
     context = {
         "delivery": delivery,
@@ -274,12 +327,12 @@ def optimization_visualizations(request, delivery_id):
         "solution2": json.dumps(solution2),
         "solution3": json.dumps(solution3),
         "best_solution": json.dumps(best_solution),
+        "best_solution_json": json.dumps(best_solution),
+        "solution1_distance": total_distance_solution1,
+        "solution2_distance": total_distance_solution2,
+        "solution3_distance": total_distance_solution3,
+        "best_solution_distance": round(best_solution_distance, 2),
     }
-
-    print("solution 1:", solution1)
-    print("solution 2:", solution2)
-    print("solution 3:", solution3)
-    print("best solution:", best_solution)
 
     return render(request, "visualization.html", context)
 

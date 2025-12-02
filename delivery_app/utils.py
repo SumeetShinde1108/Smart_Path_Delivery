@@ -49,6 +49,14 @@ def assign_routes_to_delivery(store, orders, vehicles, delivery_date, num_varian
     orders.sort(key=lambda o: o.weight, reverse=True)
     vehicles.sort(key=lambda v: (-v.average_speed, -v.capacity))
 
+    max_capacity = max(v.capacity for v in vehicles)
+    oversized_orders = [o.order_id for o in orders if o.weight > max_capacity]
+    if oversized_orders:
+        raise ValueError(
+            "ERROR: The following orders exceed the capacity of any vehicle: "
+            + ", ".join(oversized_orders)
+        )
+
     delivery_weight = sum(o.weight for o in orders)
     delivery, _ = Delivery.objects.get_or_create(
         store=store,
@@ -115,7 +123,11 @@ def assign_routes_to_delivery(store, orders, vehicles, delivery_date, num_varian
 
 
     if not variants:
-        raise ValueError("ERROR: No valid route variants generated.")
+        fallback_variant = build_sequential_fallback_variant(store, orders, vehicles)
+        if fallback_variant["vehicle_routes"]:
+            variants.append(fallback_variant)
+        else:
+            raise ValueError("ERROR: No valid route variants generated.")
 
     return variants
 
@@ -184,3 +196,86 @@ def assign_vehicles_and_extract_routes(
         total_distance += route_distance
 
     return {"vehicle_routes": routes, "total_distance": total_distance / 1000}
+
+
+def build_sequential_fallback_variant(store, orders, vehicles):
+    remaining_orders = list(orders)
+    vehicle_routes = []
+    total_distance = 0.0
+
+    for vehicle in vehicles:
+        if not remaining_orders:
+            break
+
+        capacity = vehicle.capacity
+        assigned_orders = []
+        load = 0.0
+        idx = 0
+
+        while idx < len(remaining_orders):
+            order = remaining_orders[idx]
+            if load + order.weight <= capacity:
+                assigned_orders.append(order)
+                load += order.weight
+                remaining_orders.pop(idx)
+            else:
+                idx += 1
+
+        if not assigned_orders:
+            continue
+
+        route_points = [
+            {
+                "location": "Warehouse",
+                "coordinates": [store.location.point.y, store.location.point.x],
+            }
+        ]
+
+        prev_point = store.location.point
+        route_distance = 0.0
+
+        for order in assigned_orders:
+            current_point = order.delivery_location.point
+            route_distance += haversine_distance(prev_point, current_point)
+            route_points.append(
+                {
+                    "location": order.order_id,
+                    "coordinates": [current_point.y, current_point.x],
+                }
+            )
+            prev_point = current_point
+
+        route_distance += haversine_distance(prev_point, store.location.point)
+        route_points.append(
+            {
+                "location": "Warehouse",
+                "coordinates": [store.location.point.y, store.location.point.x],
+            }
+        )
+
+        vehicle_routes.append(
+            {
+                "vehicle_no": vehicle.vehicle_no,
+                "average_speed_kmh": vehicle.average_speed,
+                "capacity": capacity,
+                "assigned_order_weight": load,
+                "remaining_capacity": capacity - load,
+                "route_distance_km": route_distance,
+                "route": route_points,
+            }
+        )
+
+        total_distance += route_distance
+
+    if remaining_orders:
+        unassigned_ids = ", ".join(order.order_id for order in remaining_orders)
+        raise ValueError(
+            "ERROR: Could not assign all orders within available vehicle capacities. "
+            f"Unassigned orders: {unassigned_ids}."
+        )
+
+    return {
+        "strategy": "FALLBACK_SEQUENTIAL",
+        "vehicle_routes": vehicle_routes,
+        "total_distance": total_distance,
+    }
